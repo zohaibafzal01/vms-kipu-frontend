@@ -42,10 +42,8 @@ export function AppSidebar() {
   const currentPath = location.pathname
   const isCollapsed = state === "collapsed"
 
-  const isActive = (path: string) => currentPath === path
-  const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-primary text-primary-foreground font-medium" : "hover:bg-muted/50"
-
+  console.log("Current path:", currentPath) // Debug log
+  
   return (
     <Sidebar
       className={isCollapsed ? "w-14" : "w-64"}
@@ -73,7 +71,15 @@ export function AppSidebar() {
               {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink to={item.url} end className={getNavCls}>
+                    <NavLink 
+                      to={item.url} 
+                      end 
+                      className={({ isActive }) =>
+                        isActive 
+                          ? "bg-primary text-primary-foreground font-medium flex items-center gap-2 px-3 py-2 rounded-md" 
+                          : "hover:bg-muted/50 flex items-center gap-2 px-3 py-2 rounded-md"
+                      }
+                    >
                       <item.icon className="h-4 w-4" />
                       {!isCollapsed && <span>{item.title}</span>}
                     </NavLink>
