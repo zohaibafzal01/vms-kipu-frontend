@@ -7,7 +7,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { StatusBadge } from "@/components/ui/status-badge"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Search, Filter, Eye, RefreshCw, Shield, AlertTriangle } from "lucide-react"
+import { ExportCSVModal } from "@/components/modals/ExportCSVModal"
+import { DateRangeModal } from "@/components/modals/DateRangeModal"
+import { Search, Filter, Eye, RotateCcw, Shield, Download, Calendar, RefreshCw, AlertTriangle } from "lucide-react"
 import { format } from "date-fns"
 
 // Mock data
@@ -74,6 +76,19 @@ export default function WebhookEvents() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [selectedEvent, setSelectedEvent] = useState<typeof webhookEvents[0] | null>(null)
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [showDateModal, setShowDateModal] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    setIsRefreshing(false)
+  }
+
+  const handleDateRangeSelect = (from: Date | undefined, to: Date | undefined) => {
+    console.log("Date range selected:", from, to)
+  }
 
   const filteredEvents = webhookEvents.filter(event => {
     const matchesSearch = searchTerm === "" || 
@@ -98,10 +113,25 @@ export default function WebhookEvents() {
           <h1 className="text-3xl font-bold">Webhook Events</h1>
           <p className="text-muted-foreground">Monitor incoming webhook events and their processing status</p>
         </div>
-        <Button variant="outline" className="gap-2">
-          <RefreshCw className="h-4 w-4" />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowDateModal(true)} className="gap-2">
+            <Calendar className="h-4 w-4" />
+            Date Range
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleRefresh} 
+            className="gap-2"
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button variant="outline" onClick={() => setShowExportModal(true)} className="gap-2">
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -327,6 +357,19 @@ export default function WebhookEvents() {
           </Table>
         </CardContent>
       </Card>
+
+      <ExportCSVModal 
+        open={showExportModal} 
+        onOpenChange={setShowExportModal}
+        dataType="Webhook Events"
+        availableColumns={["id", "timestamp", "status", "signatureCheck", "eventType", "payload"]}
+      />
+
+      <DateRangeModal 
+        open={showDateModal} 
+        onOpenChange={setShowDateModal}
+        onDateRangeSelect={handleDateRangeSelect}
+      />
     </div>
   )
 }

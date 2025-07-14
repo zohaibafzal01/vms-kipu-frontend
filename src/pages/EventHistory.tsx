@@ -6,7 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Search, Filter, Eye, Calendar as CalendarIcon } from "lucide-react"
+import { ExportCSVModal } from "@/components/modals/ExportCSVModal"
+import { DateRangeModal } from "@/components/modals/DateRangeModal"
+import { Search, Filter, Eye, Calendar as CalendarIcon, Download, RefreshCw } from "lucide-react"
 import { format } from "date-fns"
 
 // Mock data
@@ -67,6 +69,19 @@ export default function EventHistory() {
   const [searchTerm, setSearchTerm] = useState("")
   const [eventTypeFilter, setEventTypeFilter] = useState("all")
   const [selectedEvent, setSelectedEvent] = useState<typeof eventHistory[0] | null>(null)
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [showDateModal, setShowDateModal] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    setIsRefreshing(false)
+  }
+
+  const handleDateRangeSelect = (from: Date | undefined, to: Date | undefined) => {
+    console.log("Date range selected:", from, to)
+  }
 
   const filteredEvents = eventHistory.filter(event => {
     const matchesSearch = searchTerm === "" || 
@@ -86,10 +101,25 @@ export default function EventHistory() {
           <h1 className="text-3xl font-bold">Event History</h1>
           <p className="text-muted-foreground">Track patient events and data changes</p>
         </div>
-        <Button variant="outline" className="gap-2">
-          <CalendarIcon className="h-4 w-4" />
-          Date Range
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowDateModal(true)} className="gap-2">
+            <CalendarIcon className="h-4 w-4" />
+            Date Range
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleRefresh} 
+            className="gap-2"
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button variant="outline" onClick={() => setShowExportModal(true)} className="gap-2">
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -252,6 +282,19 @@ export default function EventHistory() {
           </Table>
         </CardContent>
       </Card>
+
+      <ExportCSVModal 
+        open={showExportModal} 
+        onOpenChange={setShowExportModal}
+        dataType="Event History"
+        availableColumns={["patientName", "patientId", "eventType", "timestamp", "changes"]}
+      />
+
+      <DateRangeModal 
+        open={showDateModal} 
+        onOpenChange={setShowDateModal}
+        onDateRangeSelect={handleDateRangeSelect}
+      />
     </div>
   )
 }

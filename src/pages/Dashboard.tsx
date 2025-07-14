@@ -1,14 +1,18 @@
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { StatsCard } from "@/components/ui/stats-card"
 import { StatusBadge } from "@/components/ui/status-badge"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Progress } from "@/components/ui/progress"
 import { 
   Users, 
   Database, 
   RefreshCw, 
   AlertTriangle,
   Clock,
-  ArrowUpRight
+  ArrowUpRight,
+  Play
 } from "lucide-react"
 
 // Mock data
@@ -30,6 +34,24 @@ const recentWebhooks = [
 ]
 
 export default function Dashboard() {
+  const [showTriggerModal, setShowTriggerModal] = useState(false)
+  const [isTriggering, setIsTriggering] = useState(false)
+  const [triggerProgress, setTriggerProgress] = useState(0)
+
+  const handleTriggerImport = async () => {
+    setIsTriggering(true)
+    setTriggerProgress(0)
+
+    // Simulate import process
+    for (let i = 0; i <= 100; i += 10) {
+      setTriggerProgress(i)
+      await new Promise(resolve => setTimeout(resolve, 200))
+    }
+
+    setIsTriggering(false)
+    setShowTriggerModal(false)
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -38,10 +60,56 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">Monitor your import daemon status and recent activity</p>
         </div>
-        <Button variant="medical" className="gap-2">
-          <RefreshCw className="h-4 w-4" />
-          Trigger Import
-        </Button>
+        <Dialog open={showTriggerModal} onOpenChange={setShowTriggerModal}>
+          <DialogTrigger asChild>
+            <Button variant="medical" className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Trigger Import
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Play className="h-5 w-5" />
+                Manual Import
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                This will start a manual import process to sync the latest patient data from the Kipu system.
+              </p>
+              
+              {isTriggering && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Import Progress</span>
+                    <span className="text-sm text-muted-foreground">{triggerProgress}%</span>
+                  </div>
+                  <Progress value={triggerProgress} className="w-full" />
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowTriggerModal(false)} 
+                  className="flex-1"
+                  disabled={isTriggering}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="medical" 
+                  onClick={handleTriggerImport} 
+                  className="flex-1"
+                  disabled={isTriggering}
+                >
+                  {isTriggering ? 'Running...' : 'Start Import'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Stats Grid */}

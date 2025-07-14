@@ -6,7 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { Badge } from "@/components/ui/badge"
-import { Search, Filter, Download, Eye } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { ExportCSVModal } from "@/components/modals/ExportCSVModal"
+import { DateRangeModal } from "@/components/modals/DateRangeModal"
+import { Search, Filter, Download, Eye, Calendar, RefreshCw } from "lucide-react"
 import { format } from "date-fns"
 
 // Mock data
@@ -53,6 +56,20 @@ export default function ImportLogs() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [sourceFilter, setSourceFilter] = useState("all")
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [showDateModal, setShowDateModal] = useState(false)
+  const [selectedLog, setSelectedLog] = useState<typeof importLogs[0] | null>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    setIsRefreshing(false)
+  }
+
+  const handleDateRangeSelect = (from: Date | undefined, to: Date | undefined) => {
+    console.log("Date range selected:", from, to)
+  }
 
   const filteredLogs = importLogs.filter(log => {
     const matchesSearch = searchTerm === "" || 
@@ -73,10 +90,25 @@ export default function ImportLogs() {
           <h1 className="text-3xl font-bold">Import Logs</h1>
           <p className="text-muted-foreground">Monitor import run history and troubleshoot issues</p>
         </div>
-        <Button variant="outline" className="gap-2">
-          <Download className="h-4 w-4" />
-          Export CSV
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowDateModal(true)} className="gap-2">
+            <Calendar className="h-4 w-4" />
+            Date Range
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleRefresh} 
+            className="gap-2"
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button variant="outline" onClick={() => setShowExportModal(true)} className="gap-2">
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -185,9 +217,62 @@ export default function ImportLogs() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm">
-                      <Eye className="h-4 w-4" />
-                    </Button>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setSelectedLog(log)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                          <DialogTitle>Import Log Details</DialogTitle>
+                        </DialogHeader>
+                        {selectedLog && (
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-sm font-medium">Import ID</label>
+                                <p className="text-sm text-muted-foreground">#{selectedLog.id}</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium">Status</label>
+                                <div className="mt-1">
+                                  <StatusBadge status={selectedLog.status}>
+                                    {selectedLog.status}
+                                  </StatusBadge>
+                                </div>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium">Started</label>
+                                <p className="text-sm text-muted-foreground">
+                                  {format(selectedLog.timestamp, "PPpp")}
+                                </p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium">Duration</label>
+                                <p className="text-sm text-muted-foreground">{selectedLog.duration}</p>
+                              </div>
+                            </div>
+                            {selectedLog.errors.length > 0 && (
+                              <div>
+                                <label className="text-sm font-medium">Errors</label>
+                                <div className="mt-2 space-y-2">
+                                  {selectedLog.errors.map((error, index) => (
+                                    <div key={index} className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                                      <p className="text-sm text-destructive">{error}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </DialogContent>
+                    </Dialog>
                   </TableCell>
                 </TableRow>
               ))}
@@ -195,6 +280,19 @@ export default function ImportLogs() {
           </Table>
         </CardContent>
       </Card>
+
+      <ExportCSVModal 
+        open={showExportModal} 
+        onOpenChange={setShowExportModal}
+        dataType="Import Logs"
+        availableColumns={["id", "timestamp", "status", "patientsProcessed", "source", "duration", "errors"]}
+      />
+
+      <DateRangeModal 
+        open={showDateModal} 
+        onOpenChange={setShowDateModal}
+        onDateRangeSelect={handleDateRangeSelect}
+      />
     </div>
   )
 }

@@ -6,7 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { Badge } from "@/components/ui/badge"
-import { Search, Filter, RefreshCw, Server, Globe } from "lucide-react"
+import { ExportCSVModal } from "@/components/modals/ExportCSVModal"
+import { DateRangeModal } from "@/components/modals/DateRangeModal"
+import { Search, Filter, RefreshCw, Server, Globe, Download, Calendar } from "lucide-react"
 import { format } from "date-fns"
 
 // Mock data
@@ -66,6 +68,39 @@ const endpointStats = {
 
 export default function VMSSync() {
   const [searchTerm, setSearchTerm] = useState("")
+  const [showTestModal, setShowTestModal] = useState(false)
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [showDateModal, setShowDateModal] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isTestingConnection, setIsTestingConnection] = useState(false)
+  const [testProgress, setTestProgress] = useState(0)
+  const [testResult, setTestResult] = useState<'idle' | 'success' | 'error'>('idle')
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    setIsRefreshing(false)
+  }
+
+  const handleDateRangeSelect = (from: Date | undefined, to: Date | undefined) => {
+    console.log("Date range selected:", from, to)
+  }
+
+  const handleTestConnection = async () => {
+    setIsTestingConnection(true)
+    setTestProgress(0)
+    setTestResult('idle')
+
+    // Simulate connection test
+    for (let i = 0; i <= 100; i += 20) {
+      setTestProgress(i)
+      await new Promise(resolve => setTimeout(resolve, 300))
+    }
+
+    // Simulate success/failure
+    setTestResult(Math.random() > 0.3 ? 'success' : 'error')
+    setIsTestingConnection(false)
+  }
   const [statusFilter, setStatusFilter] = useState("all")
   const [methodFilter, setMethodFilter] = useState("all")
 
@@ -109,10 +144,29 @@ export default function VMSSync() {
           <h1 className="text-3xl font-bold">VMS Sync Activity</h1>
           <p className="text-muted-foreground">Monitor API calls to the VMS system</p>
         </div>
-        <Button variant="medical" className="gap-2">
-          <RefreshCw className="h-4 w-4" />
-          Test Connection
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowDateModal(true)} className="gap-2">
+            <Calendar className="h-4 w-4" />
+            Date Range
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleRefresh} 
+            className="gap-2"
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button variant="outline" onClick={() => setShowExportModal(true)} className="gap-2">
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+          <Button variant="medical" onClick={() => setShowTestModal(true)} className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Test Connection
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -312,6 +366,19 @@ export default function VMSSync() {
           </div>
         </CardContent>
       </Card>
+
+      <ExportCSVModal 
+        open={showExportModal} 
+        onOpenChange={setShowExportModal}
+        dataType="VMS Sync Activity"
+        availableColumns={["id", "timestamp", "endpoint", "patientId", "httpStatus", "responseTime", "retryCount"]}
+      />
+
+      <DateRangeModal 
+        open={showDateModal} 
+        onOpenChange={setShowDateModal}
+        onDateRangeSelect={handleDateRangeSelect}
+      />
     </div>
   )
 }
