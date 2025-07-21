@@ -145,11 +145,11 @@ export default function VMSSync() {
           <p className="text-muted-foreground">Monitor API calls to the VMS system</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowDateModal(true)} className="gap-2">
+          {/* <Button variant="outline" onClick={() => setShowDateModal(true)} className="gap-2">
             <Calendar className="h-4 w-4" />
             Date Range
-          </Button>
-          <Button 
+          </Button> */}
+          {/* <Button 
             variant="outline" 
             onClick={handleRefresh} 
             className="gap-2"
@@ -157,11 +157,11 @@ export default function VMSSync() {
           >
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
-          </Button>
-          <Button variant="outline" onClick={() => setShowExportModal(true)} className="gap-2">
+          </Button> */}
+          {/* <Button variant="outline" onClick={() => setShowExportModal(true)} className="gap-2">
             <Download className="h-4 w-4" />
             Export CSV
-          </Button>
+          </Button> */}
           <Button variant="medical" onClick={() => setShowTestModal(true)} className="gap-2">
             <RefreshCw className="h-4 w-4" />
             Test Connection
@@ -328,7 +328,7 @@ export default function VMSSync() {
       </Card>
 
       {/* API Endpoints Summary */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>Endpoint Performance Summary</CardTitle>
         </CardHeader>
@@ -365,9 +365,9 @@ export default function VMSSync() {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
-      <ExportCSVModal 
+      {/* <ExportCSVModal 
         open={showExportModal} 
         onOpenChange={setShowExportModal}
         dataType="VMS Sync Activity"
@@ -378,7 +378,7 @@ export default function VMSSync() {
         open={showDateModal} 
         onOpenChange={setShowDateModal}
         onDateRangeSelect={handleDateRangeSelect}
-      />
+      /> */}
     </div>
   )
 }

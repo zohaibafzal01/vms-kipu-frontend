@@ -18,6 +18,7 @@ const eventHistory = [
     patientName: "John Smith",
     patientId: "P001234",
     eventType: "ADMISSION",
+    status: 'COMPLETED',
     timestamp: new Date("2024-01-15T14:28:15"),
     changes: {
       room: { from: null, to: "Building A, Room 101, Bed A" },
@@ -29,6 +30,7 @@ const eventHistory = [
     patientName: "Sarah Johnson",
     patientId: "P001235",
     eventType: "UPDATE",
+    status: 'ACKNOWLEDGED',
     timestamp: new Date("2024-01-15T14:25:32"),
     changes: {
       room: { from: "Building A, Room 101, Bed B", to: "Building A, Room 102, Bed A" },
@@ -40,6 +42,7 @@ const eventHistory = [
     patientName: "Mike Davis",
     patientId: "P001236",
     eventType: "DISCHARGE",
+    status: 'COMPLETED',
     timestamp: new Date("2024-01-15T14:20:18"),
     changes: {
       room: { from: "Building B, Room 201, Bed A", to: null },
@@ -51,6 +54,7 @@ const eventHistory = [
     patientName: "Emily Brown",
     patientId: "P001237",
     eventType: "ADMISSION",
+    status: 'COMPLETED',
     timestamp: new Date("2024-01-15T14:15:44"),
     changes: {
       room: { from: null, to: "Building A, Room 103, Bed B" },
@@ -63,6 +67,11 @@ const eventTypeColors = {
   ADMISSION: "success" as const,
   DISCHARGE: "warning" as const,
   UPDATE: "outline" as const
+}
+
+const statusTypeColors = {
+  COMPLETED: "success" as const,
+  ACKNOWLEDGED: "outline" as const
 }
 
 export default function EventHistory() {
@@ -102,10 +111,10 @@ export default function EventHistory() {
           <p className="text-muted-foreground">Track patient events and data changes</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowDateModal(true)} className="gap-2">
+          {/* <Button variant="outline" onClick={() => setShowDateModal(true)} className="gap-2">
             <CalendarIcon className="h-4 w-4" />
             Date Range
-          </Button>
+          </Button> */}
           <Button 
             variant="outline" 
             onClick={handleRefresh} 
@@ -115,10 +124,10 @@ export default function EventHistory() {
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button variant="outline" onClick={() => setShowExportModal(true)} className="gap-2">
+          {/* <Button variant="outline" onClick={() => setShowExportModal(true)} className="gap-2">
             <Download className="h-4 w-4" />
             Export CSV
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -167,10 +176,12 @@ export default function EventHistory() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>ID</TableHead>
                 <TableHead>Patient</TableHead>
                 <TableHead>Event Type</TableHead>
                 <TableHead>Date & Time</TableHead>
                 <TableHead>Changes</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -178,10 +189,10 @@ export default function EventHistory() {
               {filteredEvents.map((event) => (
                 <TableRow key={event.id}>
                   <TableCell>
-                    <div className="space-y-1">
+                      <div className="font-medium">{event.patientId}</div>
+                  </TableCell>
+                  <TableCell>
                       <div className="font-medium">{event.patientName}</div>
-                      <div className="text-sm text-muted-foreground">{event.patientId}</div>
-                    </div>
                   </TableCell>
                   <TableCell>
                     <Badge variant={eventTypeColors[event.eventType]}>
@@ -213,6 +224,11 @@ export default function EventHistory() {
                         </div>
                       ))}
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={statusTypeColors[event.status]}>
+                      {event.status}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <Dialog>

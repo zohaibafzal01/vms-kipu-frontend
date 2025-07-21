@@ -91,10 +91,10 @@ export default function ImportLogs() {
           <p className="text-muted-foreground">Monitor import run history and troubleshoot issues</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowDateModal(true)} className="gap-2">
+          {/* <Button variant="outline" onClick={() => setShowDateModal(true)} className="gap-2">
             <Calendar className="h-4 w-4" />
             Date Range
-          </Button>
+          </Button> */}
           <Button 
             variant="outline" 
             onClick={handleRefresh} 
@@ -104,10 +104,10 @@ export default function ImportLogs() {
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button variant="outline" onClick={() => setShowExportModal(true)} className="gap-2">
+          {/* <Button variant="outline" onClick={() => setShowExportModal(true)} className="gap-2">
             <Download className="h-4 w-4" />
             Export CSV
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -139,7 +139,7 @@ export default function ImportLogs() {
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="success">Success</SelectItem>
-                <SelectItem value="error">Error</SelectItem>
+                {/* <SelectItem value="error">Error</SelectItem> */}
                 <SelectItem value="pending">Pending</SelectItem>
               </SelectContent>
             </Select>
@@ -173,7 +173,7 @@ export default function ImportLogs() {
                 <TableHead>Patients</TableHead>
                 <TableHead>Source</TableHead>
                 <TableHead>Duration</TableHead>
-                <TableHead>Errors</TableHead>
+                {/* <TableHead>Errors</TableHead> */}
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -201,7 +201,7 @@ export default function ImportLogs() {
                     <Badge variant="outline">{log.source}</Badge>
                   </TableCell>
                   <TableCell>{log.duration}</TableCell>
-                  <TableCell>
+                  {/* <TableCell>
                     {log.errors.length > 0 ? (
                       <div className="space-y-1">
                         {log.errors.map((error, index) => (
@@ -215,7 +215,7 @@ export default function ImportLogs() {
                         No errors
                       </Badge>
                     )}
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell>
                     <Dialog>
                       <DialogTrigger asChild>
