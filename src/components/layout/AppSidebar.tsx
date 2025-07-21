@@ -29,7 +29,7 @@ import { Button } from "@/components/ui/button"
 
 const navigationItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Import Logs", url: "/logs", icon: FileText },
+  { title: "Logs Viewer", url: "/logs", icon: FileText },
   { title: "Event History", url: "/events", icon: Calendar },
   { title: "Room Mapping", url: "/mappings", icon: Map },
   { title: "Webhook Events", url: "/webhooks", icon: Webhook },

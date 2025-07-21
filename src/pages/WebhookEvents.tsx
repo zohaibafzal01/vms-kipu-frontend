@@ -114,10 +114,10 @@ export default function WebhookEvents() {
           <p className="text-muted-foreground">Monitor incoming webhook events and their processing status</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowDateModal(true)} className="gap-2">
+          {/* <Button variant="outline" onClick={() => setShowDateModal(true)} className="gap-2">
             <Calendar className="h-4 w-4" />
             Date Range
-          </Button>
+          </Button> */}
           <Button 
             variant="outline" 
             onClick={handleRefresh} 
@@ -127,10 +127,10 @@ export default function WebhookEvents() {
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button variant="outline" onClick={() => setShowExportModal(true)} className="gap-2">
+          {/* <Button variant="outline" onClick={() => setShowExportModal(true)} className="gap-2">
             <Download className="h-4 w-4" />
             Export CSV
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -358,18 +358,18 @@ export default function WebhookEvents() {
         </CardContent>
       </Card>
 
-      <ExportCSVModal 
+      {/* <ExportCSVModal 
         open={showExportModal} 
         onOpenChange={setShowExportModal}
         dataType="Webhook Events"
         availableColumns={["id", "timestamp", "status", "signatureCheck", "eventType", "payload"]}
-      />
+      /> */}
 
-      <DateRangeModal 
+      {/* <DateRangeModal 
         open={showDateModal} 
         onOpenChange={setShowDateModal}
         onDateRangeSelect={handleDateRangeSelect}
-      />
+      /> */}
     </div>
   )
 }

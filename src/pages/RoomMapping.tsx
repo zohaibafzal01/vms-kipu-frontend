@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -47,6 +47,17 @@ const mappingSchema = Yup.object().shape({
   vmsBed: Yup.string().required("VMS Bed is required"),
 })
 
+const addMappingSchema = Yup.object().shape({
+  kipuBuilding: Yup.string().required("Kipu Building is required"),
+  kipuRoom: Yup.string().required("Kipu Room is required"),
+  kipuBed: Yup.string().required("Kipu Bed is required"),
+  vmsBuilding: Yup.string().required("VMS Building is required"),
+  vmsWing: Yup.string().required("VMS Wing is required"),
+  vmsZone: Yup.string().required("VMS Zone is required"),
+  vmsRoom: Yup.string().required("VMS Room is required"),
+  vmsBed: Yup.string().required("VMS Bed is required"),
+})
+
 export default function RoomMapping() {
   const [editingMapping, setEditingMapping] = useState<typeof roomMappings[0] | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -56,9 +67,17 @@ export default function RoomMapping() {
     setIsDialogOpen(true)
   }
 
-  const handleSaveMapping = (values: any) => {
-    // In real app, this would save to backend
-    console.log("Saving mapping:", values)
+  const handleAddMapping = () => {
+    setEditingMapping(null)
+    setIsDialogOpen(true)
+  }
+
+  const handleSaveMapping = (values: any, id: number | null) => {
+    if (id !== null) {
+      console.log("Updating mapping with id", id, "with values", values)
+    } else {
+      console.log("Adding new mapping with values", values)
+    }
     setIsDialogOpen(false)
     setEditingMapping(null)
   }
@@ -89,7 +108,7 @@ export default function RoomMapping() {
             <Upload className="h-4 w-4" />
             Import Excel
           </Button>
-          <Button variant="medical" className="gap-2">
+          <Button variant="medical" className="gap-2" onClick={handleAddMapping}>
             <Plus className="h-4 w-4" />
             Add Mapping
           </Button>
@@ -97,7 +116,20 @@ export default function RoomMapping() {
       </div>
 
       {/* Status Summary */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Rooms</p>
+                <p className="text-2xl font-bold text-success">
+                  {roomMappings.length}
+                </p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-success" />
+            </div>
+          </CardContent>
+        </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -203,7 +235,7 @@ export default function RoomMapping() {
         </CardContent>
       </Card>
 
-      {/* Edit Mapping Dialog */}
+      {/* Edit/Add Mapping Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -211,7 +243,7 @@ export default function RoomMapping() {
               {editingMapping ? "Edit Room Mapping" : "Add Room Mapping"}
             </DialogTitle>
           </DialogHeader>
-          {editingMapping && (
+          {editingMapping ? (
             <Formik
               initialValues={{
                 vmsBuilding: editingMapping.vms.building,
@@ -221,11 +253,10 @@ export default function RoomMapping() {
                 vmsBed: editingMapping.vms.bed,
               }}
               validationSchema={mappingSchema}
-              onSubmit={handleSaveMapping}
+              onSubmit={(values) => handleSaveMapping(values, editingMapping.id)}
             >
               {({ errors, touched }) => (
                 <Form className="space-y-4">
-                  {/* Kipu Information (Read-only) */}
                   <div className="p-4 bg-muted rounded-md">
                     <h4 className="font-medium mb-3">Kipu Location</h4>
                     <div className="grid grid-cols-3 gap-4 text-sm">
@@ -243,8 +274,6 @@ export default function RoomMapping() {
                       </div>
                     </div>
                   </div>
-
-                  {/* VMS Mapping (Editable) */}
                   <div>
                     <h4 className="font-medium mb-3">VMS Mapping</h4>
                     <div className="grid grid-cols-2 gap-4">
@@ -258,7 +287,7 @@ export default function RoomMapping() {
                           className={errors.vmsBuilding && touched.vmsBuilding ? "border-destructive" : ""}
                         />
                         {errors.vmsBuilding && touched.vmsBuilding && (
-                          <p className="text-sm text-destructive mt-1">{errors.vmsBuilding as string}</p>
+                          <p className="text-sm text-destructive mt-1">{errors.vmsBuilding}</p>
                         )}
                       </div>
                       <div>
@@ -271,7 +300,7 @@ export default function RoomMapping() {
                           className={errors.vmsWing && touched.vmsWing ? "border-destructive" : ""}
                         />
                         {errors.vmsWing && touched.vmsWing && (
-                          <p className="text-sm text-destructive mt-1">{errors.vmsWing as string}</p>
+                          <p className="text-sm text-destructive mt-1">{errors.vmsWing}</p>
                         )}
                       </div>
                       <div>
@@ -284,7 +313,7 @@ export default function RoomMapping() {
                           className={errors.vmsZone && touched.vmsZone ? "border-destructive" : ""}
                         />
                         {errors.vmsZone && touched.vmsZone && (
-                          <p className="text-sm text-destructive mt-1">{errors.vmsZone as string}</p>
+                          <p className="text-sm text-destructive mt-1">{errors.vmsZone}</p>
                         )}
                       </div>
                       <div>
@@ -297,7 +326,7 @@ export default function RoomMapping() {
                           className={errors.vmsRoom && touched.vmsRoom ? "border-destructive" : ""}
                         />
                         {errors.vmsRoom && touched.vmsRoom && (
-                          <p className="text-sm text-destructive mt-1">{errors.vmsRoom as string}</p>
+                          <p className="text-sm text-destructive mt-1">{errors.vmsRoom}</p>
                         )}
                       </div>
                       <div className="col-span-2">
@@ -310,12 +339,11 @@ export default function RoomMapping() {
                           className={errors.vmsBed && touched.vmsBed ? "border-destructive" : ""}
                         />
                         {errors.vmsBed && touched.vmsBed && (
-                          <p className="text-sm text-destructive mt-1">{errors.vmsBed as string}</p>
+                          <p className="text-sm text-destructive mt-1">{errors.vmsBed}</p>
                         )}
                       </div>
                     </div>
                   </div>
-
                   <div className="flex justify-end gap-3">
                     <Button 
                       type="button" 
@@ -325,7 +353,153 @@ export default function RoomMapping() {
                       Cancel
                     </Button>
                     <Button type="submit" variant="medical">
-                      Save Mapping
+                      Save Changes
+                    </Button>
+                  </div>
+                </Form>
+              )}
+            </Formik>
+          ) : (
+            <Formik
+              initialValues={{
+                kipuBuilding: "",
+                kipuRoom: "",
+                kipuBed: "",
+                vmsBuilding: "",
+                vmsWing: "",
+                vmsZone: "",
+                vmsRoom: "",
+                vmsBed: "",
+              }}
+              validationSchema={addMappingSchema}
+              onSubmit={(values) => handleSaveMapping(values, null)}
+            >
+              {({ errors, touched }) => (
+                <Form className="space-y-4">
+                  <div>
+                    <h4 className="font-medium mb-3">Kipu Location</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="kipuBuilding">Building</Label>
+                        <Field
+                          as={Input}
+                          id="kipuBuilding"
+                          name="kipuBuilding"
+                          placeholder="Main Hospital"
+                          className={errors.kipuBuilding && touched.kipuBuilding ? "border-destructive" : ""}
+                        />
+                        {errors.kipuBuilding && touched.kipuBuilding && (
+                          <p className="text-sm text-destructive mt-1">{errors.kipuBuilding}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label htmlFor="kipuRoom">Room</Label>
+                        <Field
+                          as={Input}
+                          id="kipuRoom"
+                          name="kipuRoom"
+                          placeholder="101"
+                          className={errors.kipuRoom && touched.kipuRoom ? "border-destructive" : ""}
+                        />
+                        {errors.kipuRoom && touched.kipuRoom && (
+                          <p className="text-sm text-destructive mt-1">{errors.kipuRoom}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label htmlFor="kipuBed">Bed</Label>
+                        <Field
+                          as={Input}
+                          id="kipuBed"
+                          name="kipuBed"
+                          placeholder="A"
+                          className={errors.kipuBed && touched.kipuBed ? "border-destructive" : ""}
+                        />
+                        {errors.kipuBed && touched.kipuBed && (
+                          <p className="text-sm text-destructive mt-1">{errors.kipuBed}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-3">VMS Mapping</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="vmsBuilding">Building</Label>
+                        <Field
+                          as={Input}
+                          id="vmsBuilding"
+                          name="vmsBuilding"
+                          placeholder="Building A"
+                          className={errors.vmsBuilding && touched.vmsBuilding ? "border-destructive" : ""}
+                        />
+                        {errors.vmsBuilding && touched.vmsBuilding && (
+                          <p className="text-sm text-destructive mt-1">{errors.vmsBuilding}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label htmlFor="vmsWing">Wing</Label>
+                        <Field
+                          as={Input}
+                          id="vmsWing"
+                          name="vmsWing"
+                          placeholder="East"
+                          className={errors.vmsWing && touched.vmsWing ? "border-destructive" : ""}
+                        />
+                        {errors.vmsWing && touched.vmsWing && (
+                          <p className="text-sm text-destructive mt-1">{errors.vmsWing}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label htmlFor="vmsZone">Zone</Label>
+                        <Field
+                          as={Input}
+                          id="vmsZone"
+                          name="vmsZone"
+                          placeholder="Medical"
+                          className={errors.vmsZone && touched.vmsZone ? "border-destructive" : ""}
+                        />
+                        {errors.vmsZone && touched.vmsZone && (
+                          <p className="text-sm text-destructive mt-1">{errors.vmsZone}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label htmlFor="vmsRoom">Room</Label>
+                        <Field
+                          as={Input}
+                          id="vmsRoom"
+                          name="vmsRoom"
+                          placeholder="101"
+                          className={errors.vmsRoom && touched.vmsRoom ? "border-destructive" : ""}
+                        />
+                        {errors.vmsRoom && touched.vmsRoom && (
+                          <p className="text-sm text-destructive mt-1">{errors.vmsRoom}</p>
+                        )}
+                      </div>
+                      <div className="col-span-2">
+                        <Label htmlFor="vmsBed">Bed</Label>
+                        <Field
+                          as={Input}
+                          id="vmsBed"
+                          name="vmsBed"
+                          placeholder="A"
+                          className={errors.vmsBed && touched.vmsBed ? "border-destructive" : ""}
+                        />
+                        {errors.vmsBed && touched.vmsBed && (
+                          <p className="text-sm text-destructive mt-1">{errors.vmsBed}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-3">
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="medical">
+                      Add Mapping
                     </Button>
                   </div>
                 </Form>
