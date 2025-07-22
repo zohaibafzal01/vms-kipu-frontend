@@ -1,42 +1,64 @@
-import { useState } from "react"
-import { NavLink } from "react-router-dom"
-import { Button } from "@/components/ui/button"
-import { 
-  LayoutDashboard, 
-  FileText, 
-  Calendar, 
-  Map, 
-  Webhook, 
+import { useState } from "react";
+import { NavLink } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  LayoutDashboard,
+  FileText,
+  Calendar,
+  Map,
+  Webhook,
   Activity,
   Menu,
   X,
   Database,
   Bell,
   User,
-  RefreshCw
-} from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+  RefreshCw,
+  LogOut,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { useNavigate } from "react-router-dom";
+
+import { Badge } from "@/components/ui/badge";
 
 interface MainLayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 const navigationItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Logs Viewer", url: "/logs", icon: FileText },
   { title: "Event History", url: "/events", icon: Calendar },
   { title: "Room Mapping", url: "/mappings", icon: Map },
   { title: "Webhook Events", url: "/webhooks", icon: Webhook },
   { title: "VMS Sync", url: "/sync", icon: Activity },
-]
+];
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login");
+    window.location.reload();
+  };
 
   return (
     <div className="min-h-screen flex w-full bg-background">
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-card border-r border-border transition-all duration-300 flex flex-col`}>
+      <div
+        className={`${
+          sidebarOpen ? "w-64" : "w-16"
+        } bg-card border-r border-border transition-all duration-300 flex flex-col`}
+      >
         {/* Sidebar Header */}
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-3">
@@ -62,14 +84,16 @@ export function MainLayout({ children }: MainLayoutProps) {
                 end
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                    isActive 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-muted text-muted-foreground hover:text-foreground"
                   }`
                 }
               >
                 <item.icon className="h-4 w-4 flex-shrink-0" />
-                {sidebarOpen && <span className="text-sm font-medium">{item.title}</span>}
+                {sidebarOpen && (
+                  <span className="text-sm font-medium">{item.title}</span>
+                )}
               </NavLink>
             ))}
           </div>
@@ -81,16 +105,22 @@ export function MainLayout({ children }: MainLayoutProps) {
         {/* Header */}
         <header className="h-16 flex items-center justify-between border-b border-border bg-background px-4">
           <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="sm"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
-              {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              {sidebarOpen ? (
+                <X className="h-4 w-4" />
+              ) : (
+                <Menu className="h-4 w-4" />
+              )}
             </Button>
             <div>
               <h2 className="text-lg font-semibold">Kipu Import Daemon</h2>
-              <p className="text-sm text-muted-foreground">Healthcare Data Management</p>
+              <p className="text-sm text-muted-foreground">
+                Healthcare Data Management
+              </p>
             </div>
           </div>
 
@@ -98,7 +128,9 @@ export function MainLayout({ children }: MainLayoutProps) {
             {/* Status indicator */}
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
-              <span className="text-sm text-muted-foreground">System Active</span>
+              <span className="text-sm text-muted-foreground">
+                System Active
+              </span>
             </div>
 
             {/* Quick actions */}
@@ -111,22 +143,36 @@ export function MainLayout({ children }: MainLayoutProps) {
               <Button variant="ghost" size="icon">
                 <Bell className="h-4 w-4" />
               </Button>
-              <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs">
+              <Badge
+                variant="destructive"
+                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs"
+              >
                 3
               </Badge>
             </div>
 
-            <Button variant="ghost" size="icon">
-              <User className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <User className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-30">
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="cursor-pointer text-destructive flex items-center gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6 overflow-auto">
-          {children}
-        </main>
+        <main className="flex-1 p-6 overflow-auto">{children}</main>
       </div>
     </div>
-  )
+  );
 }

@@ -1,12 +1,23 @@
-import { useState } from "react"
-import { Formik, Form, Field } from "formik"
-import * as Yup from "yup"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Database, Shield, AlertCircle } from "lucide-react"
+import { useState } from "react";
+import { Formik, Form, Field } from "formik";
+import * as Yup from "yup";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Database, Shield, AlertCircle, Eye, EyeOff } from "lucide-react";
+import authApi from "@/api/auth";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { useDispatch } from "react-redux";
+import { login } from "@/redux/slices/userSlice";
 
 const loginSchema = Yup.object().shape({
   email: Yup.string()
@@ -15,41 +26,67 @@ const loginSchema = Yup.object().shape({
   password: Yup.string()
     .min(6, "Password must be at least 6 characters")
     .required("Password is required"),
-})
+});
 
 interface LoginFormValues {
-  email: string
-  password: string
+  email: string;
+  password: string;
 }
 
 interface LoginProps {
-  onLogin: () => void
+  onLogin: () => void;
 }
 
 export default function Login({ onLogin }: LoginProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
+  const { toast } = useToast();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (values: LoginFormValues) => {
-    setIsLoading(true)
-    setError("")
-    
+    setIsLoading(true);
+    setError("");
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Mock authentication - in real app, validate against backend
-      if (values.email === "admin@kipu.health" && values.password === "admin123") {
-        onLogin()
-      } else {
-        setError("Invalid credentials. Use admin@kipu.health / admin123")
+      const response = await authApi.login(values.email, values.password);
+      const token = response?.accessToken;
+      const user = response?.data;
+
+      if (!token || !user) {
+        throw new Error("Invalid response from server.");
       }
-    } catch (err) {
-      setError("Login failed. Please try again.")
+
+      localStorage.setItem("authToken", token);
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("user", JSON.stringify({ ...user, token }));
+
+      dispatch(login({ ...user, token }));
+
+      toast({
+        title: "Login Successful",
+        description: "Redirecting to dashboard...",
+      });
+
+      onLogin?.();
+      navigate("/dashboard");
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Login failed. Please try again.";
+      setError(message);
+
+      toast({
+        title: "Login Failed",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
@@ -96,8 +133,12 @@ export default function Login({ onLogin }: LoginProps) {
                       id="email"
                       name="email"
                       type="email"
-                      placeholder="admin@kipu.health"
-                      className={errors.email && touched.email ? "border-destructive" : ""}
+                      placeholder="example@example.com"
+                      className={
+                        errors.email && touched.email
+                          ? "border-destructive"
+                          : ""
+                      }
                     />
                     {errors.email && touched.email && (
                       <p className="text-sm text-destructive">{errors.email}</p>
@@ -106,22 +147,40 @@ export default function Login({ onLogin }: LoginProps) {
 
                   <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
-                    <Field
-                      as={Input}
-                      id="password"
-                      name="password"
-                      type="password"
-                      placeholder="Enter your password"
-                      className={errors.password && touched.password ? "border-destructive" : ""}
-                    />
+                    <div className="relative">
+                      <Field
+                        as={Input}
+                        id="password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Enter your password"
+                        className={
+                          errors.password && touched.password
+                            ? "border-destructive pr-10"
+                            : "pr-10"
+                        }
+                      />
+                      <div
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-muted-foreground"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </div>
+                    </div>
                     {errors.password && touched.password && (
-                      <p className="text-sm text-destructive">{errors.password}</p>
+                      <p className="text-sm text-destructive">
+                        {errors.password}
+                      </p>
                     )}
                   </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
+                  <Button
+                    type="submit"
+                    className="w-full"
                     variant="medical"
                     disabled={isLoading}
                   >
@@ -130,26 +189,18 @@ export default function Login({ onLogin }: LoginProps) {
                 </Form>
               )}
             </Formik>
-
-            {/* Demo credentials info */}
-            <div className="mt-4 p-3 bg-muted rounded-md">
-              <p className="text-sm text-muted-foreground">
-                <strong>Demo Credentials:</strong><br />
-                Email: admin@kipu.health<br />
-                Password: admin123
-              </p>
-            </div>
           </CardContent>
         </Card>
 
         {/* Security Notice */}
-        <Alert>
+        {/* <Alert>
           <Shield className="h-4 w-4" />
           <AlertDescription>
-            This dashboard is secured and monitored. All access attempts are logged.
+            This dashboard is secured and monitored. All access attempts are
+            logged.
           </AlertDescription>
-        </Alert>
+        </Alert> */}
       </div>
     </div>
-  )
+  );
 }

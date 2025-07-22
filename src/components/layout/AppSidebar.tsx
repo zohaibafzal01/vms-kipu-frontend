@@ -28,7 +28,7 @@ import {
 import { Button } from "@/components/ui/button"
 
 const navigationItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Logs Viewer", url: "/logs", icon: FileText },
   { title: "Event History", url: "/events", icon: Calendar },
   { title: "Room Mapping", url: "/mappings", icon: Map },
