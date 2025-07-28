@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
@@ -21,11 +21,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { useNavigate } from "react-router-dom";
-
 import { Badge } from "@/components/ui/badge";
 
 interface MainLayoutProps {
@@ -52,7 +48,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
+    <div className="h-screen w-full flex bg-background overflow-hidden">
       {/* Sidebar */}
       <div
         className={`${
@@ -60,7 +56,11 @@ export function MainLayout({ children }: MainLayoutProps) {
         } bg-card border-r border-border transition-all duration-300 flex flex-col`}
       >
         {/* Sidebar Header */}
-        <div className="p-4 border-b border-border">
+        <div
+          className={`px-4 ${
+            sidebarOpen ? "py-[13.5px]" : "py-[15.5px]"
+          }  border-b border-border`}
+        >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary-light rounded-md flex items-center justify-center">
               <Database className="w-4 h-4 text-primary-foreground" />
@@ -75,7 +75,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4">
+        <nav className="flex-1 p-4 overflow-auto">
           <div className="space-y-2">
             {navigationItems.map((item) => (
               <NavLink
@@ -83,7 +83,9 @@ export function MainLayout({ children }: MainLayoutProps) {
                 to={item.url}
                 end
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                  `flex items-center gap-3 ${
+                    sidebarOpen ? "px-3" : "px-2"
+                  } py-2 rounded-md transition-colors ${
                     isActive
                       ? "bg-primary text-primary-foreground"
                       : "hover:bg-muted text-muted-foreground hover:text-foreground"
@@ -92,7 +94,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               >
                 <item.icon className="h-4 w-4 flex-shrink-0" />
                 {sidebarOpen && (
-                  <span className="text-sm font-medium">{item.title}</span>
+                  <span className="text-sm font-medium">{item?.title}</span>
                 )}
               </NavLink>
             ))}
@@ -100,10 +102,10 @@ export function MainLayout({ children }: MainLayoutProps) {
         </nav>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      {/* Main Area */}
+      <div className="flex flex-col flex-1 min-h-0">
         {/* Header */}
-        <header className="h-16 flex items-center justify-between border-b border-border bg-background px-4">
+        <header className="h-16 flex items-center justify-between border-b border-border bg-background px-4 flex-shrink-0">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -125,7 +127,6 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Status indicator */}
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
               <span className="text-sm text-muted-foreground">
@@ -133,7 +134,6 @@ export function MainLayout({ children }: MainLayoutProps) {
               </span>
             </div>
 
-            {/* Quick actions */}
             <Button variant="ghost" size="sm">
               <RefreshCw className="h-4 w-4" />
               Trigger Import
@@ -170,8 +170,8 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 p-6 overflow-auto">{children}</main>
+        {/* Scrollable Page Content */}
+        <main className="flex-1 overflow-auto p-6">{children}</main>
       </div>
     </div>
   );
