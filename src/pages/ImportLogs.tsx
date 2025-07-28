@@ -37,9 +37,11 @@ import {
   Eye,
   Calendar,
   RefreshCw,
+  Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 import kipuApi from "@/api/kipu";
+import { useDebounce } from "use-debounce";
 
 export default function ImportLogs() {
   const [logs, setLogs] = useState<any[]>([]);
@@ -49,6 +51,7 @@ export default function ImportLogs() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [showExportModal, setShowExportModal] = useState(false);
@@ -58,9 +61,15 @@ export default function ImportLogs() {
   const fetchLogs = async () => {
     setIsLoading(true);
     try {
-      const response = await kipuApi.getImportsRuns({ page, limit: 10 });
-      setLogs(response.data || []);
-      setTotalPages(response.pagination?.totalPages || 1);
+      const response = await kipuApi.getImportsRuns({
+        page,
+        limit: 10,
+        search: debouncedSearchTerm || undefined,
+        status: statusFilter !== "all" ? statusFilter : undefined,
+        source: sourceFilter !== "all" ? sourceFilter : undefined,
+      });
+      setLogs(response?.data || []);
+      setTotalPages(response?.pagination?.totalPages || 1);
     } catch (err) {
       console.error("Failed to fetch import logs", err);
     } finally {
@@ -70,7 +79,7 @@ export default function ImportLogs() {
 
   useEffect(() => {
     fetchLogs();
-  }, [page]);
+  }, [page, debouncedSearchTerm, statusFilter, sourceFilter]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -86,12 +95,23 @@ export default function ImportLogs() {
   };
 
   const filteredLogs = logs.filter((log) => {
+    const mappedStatus =
+      statusFilter === "pending" ? "in_progress" : statusFilter;
+
+    const lowerSearch = searchTerm.toLowerCase();
+
     const matchesSearch =
       searchTerm === "" ||
-      log.id.includes(searchTerm) ||
-      log.source.toLowerCase().includes(searchTerm.toLowerCase());
+      log?.id.toLowerCase().includes(lowerSearch) ||
+      log?.status?.toLowerCase().includes(lowerSearch) ||
+      log?.source?.toLowerCase().includes(lowerSearch) ||
+      log?.record_count?.toString().includes(lowerSearch) ||
+      log?.duration?.toString().includes(lowerSearch) ||
+      log?.started_at?.toLowerCase().includes(lowerSearch) ||
+      log?.completed_at?.toLowerCase().includes(lowerSearch);
 
-    const matchesStatus = statusFilter === "all" || log.status === statusFilter;
+    const matchesStatus = mappedStatus === "all" || log.status === mappedStatus;
+
     const matchesSource =
       sourceFilter === "all" || log.source.toLowerCase() === sourceFilter;
 
@@ -188,11 +208,20 @@ export default function ImportLogs() {
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
+            {!isLoading && filteredLogs.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={7}
+                  className="text-center text-muted-foreground"
+                >
+                  No logs found for selected filters.
+                </TableCell>
+              </TableRow>
+            )}
+
             {isLoading ? (
-              <div className="flex justify-center items-center text-center w-full py-10">
-                <span className="text-muted-foreground">
-                  Loading import logs...
-                </span>
+              <div className="w-full h-[300px] table-caption content-center place-items-center ">
+                <Loader2 className="h-8 w-8 text-primary animate-spin" />
               </div>
             ) : (
               <TableBody>
@@ -212,8 +241,16 @@ export default function ImportLogs() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <StatusBadge status={log.status}>
-                        {log.status}
+                      <StatusBadge
+                        status={
+                          log?.status === "in_progress"
+                            ? "pending"
+                            : log?.status
+                        }
+                      >
+                        {log?.status === "in_progress"
+                          ? "Pending"
+                          : log?.status}
                       </StatusBadge>
                     </TableCell>
                     <TableCell>{log.record_count}</TableCell>
