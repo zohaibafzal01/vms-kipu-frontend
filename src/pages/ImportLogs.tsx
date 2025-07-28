@@ -159,12 +159,21 @@ export default function ImportLogs() {
                 <Input
                   placeholder="Search logs..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setPage(1);
+                    setSearchTerm(e.target.value);
+                  }}
                   className="pl-10"
                 />
               </div>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => {
+                setPage(1);
+                setStatusFilter(value);
+              }}
+            >
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
@@ -175,7 +184,13 @@ export default function ImportLogs() {
                 <SelectItem value="pending">Pending</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={sourceFilter} onValueChange={setSourceFilter}>
+            <Select
+              value={sourceFilter}
+              onValueChange={(value) => {
+                setPage(1);
+                setSourceFilter(value);
+              }}
+            >
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="Source" />
               </SelectTrigger>
