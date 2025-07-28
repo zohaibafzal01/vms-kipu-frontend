@@ -15,8 +15,26 @@ class KipuApi extends BaseApi {
     return await this.get(`${this.baseUrl}/export/master-patient-list`);
   }
 
-  async getImportsRuns(params?: { page?: number; limit?: number }) {
-    const query = new URLSearchParams(params as any).toString();
+  async getImportsRuns(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+    source?: string;
+  }) {
+    const filteredParams: Record<string, string> = {};
+
+    Object.entries(params || {}).forEach(([key, value]) => {
+      if (value !== undefined && value !== "undefined") {
+        if (key === "status" && value === "pending") {
+          filteredParams[key] = "in_progress";
+        } else {
+          filteredParams[key] = String(value);
+        }
+      }
+    });
+
+    const query = new URLSearchParams(filteredParams).toString();
     return await this.get(`${this.baseUrl}/import_runs?${query}`);
   }
 
