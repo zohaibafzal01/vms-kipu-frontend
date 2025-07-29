@@ -4,11 +4,16 @@ class KipuApi extends BaseApi {
   baseUrl: string = "kipu";
 
   async getDashboard() {
-    return await this.get(`${this.baseUrl}/kipu_dashboard`);
+    return await this.get(`${this.baseUrl}/dashboard`);
   }
 
-  async getEvents() {
-    return await this.get(`${this.baseUrl}/events`);
+  async getEvents(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    event?: string;
+  }) {
+    return await this.get(`${this.baseUrl}/events`, { params });
   }
 
   async getExportMaster() {

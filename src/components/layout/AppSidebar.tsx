@@ -44,8 +44,6 @@ export function AppSidebar() {
   const currentPath = location.pathname;
   const isCollapsed = state === "collapsed";
 
-  console.log("Current path:", currentPath); // Debug log
-
   return (
     <Sidebar className={isCollapsed ? "w-14" : "w-64"}>
       <SidebarContent>
