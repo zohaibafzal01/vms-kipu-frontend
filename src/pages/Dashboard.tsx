@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatsCard } from "@/components/ui/stats-card";
@@ -19,9 +19,11 @@ import {
   Clock,
   ArrowUpRight,
   Play,
+  Loader2,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { selectUserInfo } from "@/redux/selectors/userSelectors";
+import kipuApi from "@/api/kipu";
 
 // Mock data
 const dashboardStats = {
@@ -68,11 +70,26 @@ const recentWebhooks = [
 
 export default function Dashboard() {
   const userInfo = useSelector(selectUserInfo);
-  console.log("User Info:", userInfo); // Debug log
-
+  const [loading, setLoading] = useState(true);
   const [showTriggerModal, setShowTriggerModal] = useState(false);
   const [isTriggering, setIsTriggering] = useState(false);
   const [triggerProgress, setTriggerProgress] = useState(0);
+  const [dashboardStats, setDashboardStats] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      setLoading(true);
+      try {
+        const res = await kipuApi.getDashboard();
+        setDashboardStats(res?.data);
+      } catch (error) {
+        console.log("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboard();
+  }, []);
 
   const handleTriggerImport = async () => {
     setIsTriggering(true);
@@ -87,6 +104,14 @@ export default function Dashboard() {
     setIsTriggering(false);
     setShowTriggerModal(false);
   };
+
+  if (loading) {
+    return (
+      <div className="w-full h-[300px] flex justify-center items-center">
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -154,74 +179,91 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Active Patients"
-          value={dashboardStats.patientCount.toLocaleString()}
-          description="Total patients in system"
-          icon={Users}
-          trend={{ value: 5.2, isPositive: true }}
-        />
-        <StatsCard
-          title="Admissions (24h)"
-          value={dashboardStats.admissions}
-          description="New admissions today"
-          icon={ArrowUpRight}
-          trend={{ value: 12.1, isPositive: true }}
-        />
-        <StatsCard
-          title="Discharges (24h)"
-          value={dashboardStats.discharges}
-          description="Patients discharged today"
-          icon={ArrowUpRight}
-          trend={{ value: -3.4, isPositive: false }}
-        />
-        <StatsCard
-          title="Mapping Issues"
-          value={dashboardStats.mappingMismatches}
-          description="Requires attention"
-          icon={AlertTriangle}
-          className="border-warning/20"
-        />
-      </div>
+      {dashboardStats && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <StatsCard
+            title="Active Patients"
+            value={dashboardStats?.activePatients?.currentDay.toLocaleString()}
+            description="Total patients in system"
+            icon={Users}
+            trend={{
+              value: dashboardStats.activePatients?.increase ?? 0,
+              isPositive: true,
+            }}
+          />
+          <StatsCard
+            title="Admissions (24h)"
+            value={dashboardStats?.admissionPatients?.currentDay}
+            description="New admissions today"
+            icon={ArrowUpRight}
+            trend={{
+              value: dashboardStats?.admissionPatients?.increase ?? 0,
+              isPositive: dashboardStats?.admissionPatients?.increase >= 0,
+            }}
+          />
+          <StatsCard
+            title="Discharges (24h)"
+            value={dashboardStats?.dischargePatients?.currentDay}
+            description="Patients discharged today"
+            icon={ArrowUpRight}
+            trend={{
+              value: dashboardStats?.dischargePatients?.increase ?? 0,
+              isPositive: dashboardStats?.dischargePatients?.increase >= 0,
+            }}
+          />
+          <StatsCard
+            title="Mapping Issues"
+            value={dashboardStats?.mappingIssues?.total}
+            description="Requires attention"
+            icon={AlertTriangle}
+            className="border-warning/20"
+          />
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Last Import Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              Last Import Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Status</span>
-              <StatusBadge status={dashboardStats.status}>
-                {dashboardStats.status === "success" ? "Successful" : "Failed"}
-              </StatusBadge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Completed</span>
-              <span className="text-sm font-medium">
-                {dashboardStats.lastImport}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                Patients Processed
-              </span>
-              <span className="text-sm font-medium">
-                {dashboardStats.patientCount}
-              </span>
-            </div>
-            <div className="pt-2">
-              <Button variant="outline" size="sm" className="w-full">
-                View Full Log
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {dashboardStats?.importRun && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                Last Import Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Status</span>
+                <StatusBadge status={dashboardStats?.importRun?.status}>
+                  {dashboardStats?.importRun?.status === "success"
+                    ? "Successful"
+                    : "Failed"}
+                </StatusBadge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Completed</span>
+                <span className="text-sm font-medium">
+                  {new Date(
+                    dashboardStats?.importRun?.completed_at
+                  ).toLocaleString()}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
+                  Patients Processed
+                </span>
+                <span className="text-sm font-medium">
+                  {dashboardStats?.importRun?.record_count}
+                </span>
+              </div>
+              <div className="pt-2">
+                <Button variant="outline" size="sm" className="w-full">
+                  View Full Log
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Recent Webhook Events */}
         <Card>
