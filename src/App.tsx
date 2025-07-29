@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import { Provider } from "react-redux";
 import { store } from "./redux/store";
 import ProtectedRoute from "@/components/routing/ProtectedRoute";
+import PatientHistory from "./pages/PatientHistory";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +82,16 @@ const App = () => {
                   <ProtectedRoute>
                     <MainLayout>
                       <EventHistory />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/patients"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <PatientHistory />
                     </MainLayout>
                   </ProtectedRoute>
                 }
