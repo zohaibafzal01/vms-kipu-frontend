@@ -1,16 +1,17 @@
-import { useState } from "react"
-import { NavLink, useLocation } from "react-router-dom"
-import { 
-  LayoutDashboard, 
-  FileText, 
-  Calendar, 
-  Map, 
-  Webhook, 
+import { useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
+import {
+  LayoutDashboard,
+  FileText,
+  Calendar,
+  Map,
+  Webhook,
   Activity,
   LogOut,
   Settings,
-  Database
-} from "lucide-react"
+  Database,
+  User,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -24,30 +25,29 @@ import {
   SidebarTrigger,
   SidebarFooter,
   useSidebar,
-} from "@/components/ui/sidebar"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 
 const navigationItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Logs Viewer", url: "/logs", icon: FileText },
   { title: "Event History", url: "/events", icon: Calendar },
+  { title: "Patient History", url: "/patients", icon: User },
   { title: "Room Mapping", url: "/mappings", icon: Map },
   { title: "Webhook Events", url: "/webhooks", icon: Webhook },
   { title: "VMS Sync", url: "/sync", icon: Activity },
-]
+];
 
 export function AppSidebar() {
-  const { state } = useSidebar()
-  const location = useLocation()
-  const currentPath = location.pathname
-  const isCollapsed = state === "collapsed"
+  const { state } = useSidebar();
+  const location = useLocation();
+  const currentPath = location.pathname;
+  const isCollapsed = state === "collapsed";
 
-  console.log("Current path:", currentPath) // Debug log
-  
+  console.log("Current path:", currentPath); // Debug log
+
   return (
-    <Sidebar
-      className={isCollapsed ? "w-14" : "w-64"}
-    >
+    <Sidebar className={isCollapsed ? "w-14" : "w-64"}>
       <SidebarContent>
         {/* Header */}
         <div className="p-4 border-b">
@@ -71,12 +71,12 @@ export function AppSidebar() {
               {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink 
-                      to={item.url} 
-                      end 
+                    <NavLink
+                      to={item.url}
+                      end
                       className={({ isActive }) =>
-                        isActive 
-                          ? "bg-primary text-primary-foreground font-medium flex items-center gap-2 px-3 py-2 rounded-md" 
+                        isActive
+                          ? "bg-primary text-primary-foreground font-medium flex items-center gap-2 px-3 py-2 rounded-md"
                           : "hover:bg-muted/50 flex items-center gap-2 px-3 py-2 rounded-md"
                       }
                     >
@@ -100,7 +100,11 @@ export function AppSidebar() {
             </Button>
           </div>
           <div className="flex items-center gap-2 mt-2">
-            <Button variant="ghost" size="sm" className="w-full justify-start text-destructive hover:text-destructive">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-destructive hover:text-destructive"
+            >
               <LogOut className="h-4 w-4" />
               {!isCollapsed && <span>Logout</span>}
             </Button>
@@ -108,5 +112,5 @@ export function AppSidebar() {
         </div>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }
