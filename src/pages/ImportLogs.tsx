@@ -184,7 +184,7 @@ export default function ImportLogs() {
                 <SelectItem value="pending">Pending</SelectItem>
               </SelectContent>
             </Select>
-            <Select
+            {/* <Select
               value={sourceFilter}
               onValueChange={(value) => {
                 setPage(1);
@@ -200,7 +200,7 @@ export default function ImportLogs() {
                 <SelectItem value="webhook">Webhook</SelectItem>
                 <SelectItem value="manual">Manual</SelectItem>
               </SelectContent>
-            </Select>
+            </Select> */}
           </div>
         </CardContent>
       </Card>
@@ -218,8 +218,8 @@ export default function ImportLogs() {
                 <TableHead>Timestamp</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Patients</TableHead>
-                <TableHead>Source</TableHead>
-                <TableHead>Duration</TableHead>
+                {/* <TableHead>Source</TableHead> */}
+                {/* <TableHead>Duration</TableHead> */}
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -269,10 +269,10 @@ export default function ImportLogs() {
                       </StatusBadge>
                     </TableCell>
                     <TableCell>{log.record_count}</TableCell>
-                    <TableCell>
+                    {/* <TableCell>
                       <Badge variant="outline">{log.source}</Badge>
-                    </TableCell>
-                    <TableCell>{log.duration}s</TableCell>
+                    </TableCell> */}
+                    {/* <TableCell>{log.duration}s</TableCell> */}
                     <TableCell>
                       <Dialog>
                         <DialogTrigger asChild>
@@ -320,14 +320,14 @@ export default function ImportLogs() {
                                     )}
                                   </p>
                                 </div>
-                                <div>
+                                {/* <div>
                                   <label className="text-sm font-medium">
                                     Duration
                                   </label>
                                   <p className="text-sm text-muted-foreground">
                                     {selectedLog.duration}s
                                   </p>
-                                </div>
+                                </div> */}
                               </div>
                               {selectedLog.error_log && (
                                 <div>

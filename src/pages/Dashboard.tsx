@@ -105,14 +105,6 @@ export default function Dashboard() {
     setShowTriggerModal(false);
   };
 
-  if (loading) {
-    return (
-      <div className="w-full h-[300px] flex justify-center items-center">
-        <Loader2 className="h-8 w-8 text-primary animate-spin" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -178,151 +170,163 @@ export default function Dashboard() {
         </Dialog>
       </div>
 
-      {/* Stats Grid */}
-      {dashboardStats && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatsCard
-            title="Active Patients"
-            value={dashboardStats?.activePatients?.currentDay.toLocaleString()}
-            description="Total patients in system"
-            icon={Users}
-            trend={{
-              value: dashboardStats.activePatients?.increase ?? 0,
-              isPositive: true,
-            }}
-          />
-          <StatsCard
-            title="Admissions (24h)"
-            value={dashboardStats?.admissionPatients?.currentDay}
-            description="New admissions today"
-            icon={ArrowUpRight}
-            trend={{
-              value: dashboardStats?.admissionPatients?.increase ?? 0,
-              isPositive: dashboardStats?.admissionPatients?.increase >= 0,
-            }}
-          />
-          <StatsCard
-            title="Discharges (24h)"
-            value={dashboardStats?.dischargePatients?.currentDay}
-            description="Patients discharged today"
-            icon={ArrowUpRight}
-            trend={{
-              value: dashboardStats?.dischargePatients?.increase ?? 0,
-              isPositive: dashboardStats?.dischargePatients?.increase >= 0,
-            }}
-          />
-          <StatsCard
-            title="Mapping Issues"
-            value={dashboardStats?.mappingIssues?.total}
-            description="Requires attention"
-            icon={AlertTriangle}
-            className="border-warning/20"
-          />
+      {loading ? (
+        <div className="w-full h-[300px] flex justify-center items-center">
+          <Loader2 className="h-8 w-8 text-primary animate-spin" />
         </div>
-      )}
+      ) : (
+        <>
+          {/* Stats Grid */}
+          {dashboardStats && (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <StatsCard
+                title="Active Patients"
+                value={dashboardStats?.activePatients?.currentDay.toLocaleString()}
+                description="Total patients in system"
+                icon={Users}
+                trend={{
+                  value: dashboardStats.activePatients?.increase ?? 0,
+                  isPositive: true,
+                }}
+              />
+              <StatsCard
+                title="Admissions (24h)"
+                value={dashboardStats?.admissionPatients?.currentDay}
+                description="New admissions today"
+                icon={ArrowUpRight}
+                trend={{
+                  value: dashboardStats?.admissionPatients?.increase ?? 0,
+                  isPositive: dashboardStats?.admissionPatients?.increase >= 0,
+                }}
+              />
+              <StatsCard
+                title="Discharges (24h)"
+                value={dashboardStats?.dischargePatients?.currentDay}
+                description="Patients discharged today"
+                icon={ArrowUpRight}
+                trend={{
+                  value: dashboardStats?.dischargePatients?.increase ?? 0,
+                  isPositive: dashboardStats?.dischargePatients?.increase >= 0,
+                }}
+              />
+              <StatsCard
+                title="Mapping Issues"
+                value={dashboardStats?.mappingIssues?.total}
+                description="Requires attention"
+                icon={AlertTriangle}
+                className="border-warning/20"
+              />
+            </div>
+          )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Last Import Status */}
-        {dashboardStats?.importRun && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Last Import Status */}
+            {dashboardStats?.importRun && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Database className="h-5 w-5" />
+                    Last Import Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Status
+                    </span>
+                    <StatusBadge status={dashboardStats?.importRun?.status}>
+                      {dashboardStats?.importRun?.status === "success"
+                        ? "Successful"
+                        : "Failed"}
+                    </StatusBadge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Completed
+                    </span>
+                    <span className="text-sm font-medium">
+                      {new Date(
+                        dashboardStats?.importRun?.completed_at
+                      ).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Patients Processed
+                    </span>
+                    <span className="text-sm font-medium">
+                      {dashboardStats?.importRun?.record_count}
+                    </span>
+                  </div>
+                  <div className="pt-2">
+                    <Button variant="outline" size="sm" className="w-full">
+                      View Full Log
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Recent Webhook Events */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-5 w-5" />
+                    Recent Webhook Events
+                  </div>
+                  <Button variant="ghost" size="sm">
+                    View All
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {recentWebhooks.map((webhook) => (
+                    <div
+                      key={webhook.id}
+                      className="flex items-center justify-between py-2 border-b last:border-0"
+                    >
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">{webhook.type}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {webhook.timestamp}
+                        </p>
+                      </div>
+                      <StatusBadge status={webhook.status} showIcon={false}>
+                        {webhook.status}
+                      </StatusBadge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Actions */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="h-5 w-5" />
-                Last Import Status
-              </CardTitle>
+              <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Status</span>
-                <StatusBadge status={dashboardStats?.importRun?.status}>
-                  {dashboardStats?.importRun?.status === "success"
-                    ? "Successful"
-                    : "Failed"}
-                </StatusBadge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Completed</span>
-                <span className="text-sm font-medium">
-                  {new Date(
-                    dashboardStats?.importRun?.completed_at
-                  ).toLocaleString()}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Patients Processed
-                </span>
-                <span className="text-sm font-medium">
-                  {dashboardStats?.importRun?.record_count}
-                </span>
-              </div>
-              <div className="pt-2">
-                <Button variant="outline" size="sm" className="w-full">
-                  View Full Log
+            <CardContent>
+              <div className="grid gap-3 md:grid-cols-3">
+                <Button variant="outline" className="justify-start gap-2">
+                  <Database className="h-4 w-4" />
+                  Manual Import
+                </Button>
+                <Button variant="outline" className="justify-start gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  Review Errors
+                </Button>
+                <Button variant="outline" className="justify-start gap-2">
+                  <RefreshCw className="h-4 w-4" />
+                  Sync Room Mappings
                 </Button>
               </div>
             </CardContent>
           </Card>
-        )}
-
-        {/* Recent Webhook Events */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Recent Webhook Events
-              </div>
-              <Button variant="ghost" size="sm">
-                View All
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {recentWebhooks.map((webhook) => (
-                <div
-                  key={webhook.id}
-                  className="flex items-center justify-between py-2 border-b last:border-0"
-                >
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">{webhook.type}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {webhook.timestamp}
-                    </p>
-                  </div>
-                  <StatusBadge status={webhook.status} showIcon={false}>
-                    {webhook.status}
-                  </StatusBadge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 md:grid-cols-3">
-            <Button variant="outline" className="justify-start gap-2">
-              <Database className="h-4 w-4" />
-              Manual Import
-            </Button>
-            <Button variant="outline" className="justify-start gap-2">
-              <AlertTriangle className="h-4 w-4" />
-              Review Errors
-            </Button>
-            <Button variant="outline" className="justify-start gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Sync Room Mappings
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        </>
+      )}
     </div>
   );
 }
