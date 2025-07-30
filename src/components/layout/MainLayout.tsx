@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +23,10 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { selectUserInfo } from "@/redux/selectors/userSelectors";
+import { useSelector } from "react-redux";
+import { isTokenExpired } from "@/redux/utils/authUtils";
+import { useToast } from "@/hooks/use-toast";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -32,21 +36,47 @@ const navigationItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Logs Viewer", url: "/logs", icon: FileText },
   { title: "Event History", url: "/events", icon: Calendar },
-  { title: "Patient History", url: "/patients", icon: User }, 
+  { title: "Patient History", url: "/patients", icon: User },
   { title: "Room Mapping", url: "/mappings", icon: Map },
   { title: "Webhook Events", url: "/webhooks", icon: Webhook },
   { title: "VMS Sync", url: "/sync", icon: Activity },
 ];
 
 export function MainLayout({ children }: MainLayoutProps) {
+  const userInfo = useSelector(selectUserInfo);
+  const { toast } = useToast();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const handleLogout = () => {
+  const handleLogout = (reason?: string) => {
+    toast({
+      title: reason ? "Session Expired" : "Logged Out",
+      description: reason || "You have been successfully logged out.",
+      variant: reason ? "destructive" : "default",
+    });
+
     localStorage.clear();
     navigate("/login");
     window.location.reload();
   };
+
+  useEffect(() => {
+    const token = userInfo?.token || localStorage.getItem("token");
+
+    if (!token || isTokenExpired(token)) {
+      handleLogout("Your session has expired. Please log in again.");
+    } else {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const expiryTime = payload.exp * 1000;
+      const timeLeft = expiryTime - Date.now();
+
+      const timer = setTimeout(() => {
+        handleLogout("Your session has expired. Please log in again.");
+      }, timeLeft);
+
+      return () => clearTimeout(timer);
+    }
+  }, [userInfo]);
 
   return (
     <div className="h-screen w-full flex bg-background overflow-hidden">
@@ -160,7 +190,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-30">
                 <DropdownMenuItem
-                  onClick={handleLogout}
+                  onClick={() => handleLogout()}
                   className="cursor-pointer text-destructive flex items-center gap-2"
                 >
                   <LogOut className="h-4 w-4" />
