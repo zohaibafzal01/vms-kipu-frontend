@@ -181,7 +181,7 @@ export default function Dashboard() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <StatsCard
                 title="Active Patients"
-                value={dashboardStats?.activePatients?.currentDay.toLocaleString()}
+                value={dashboardStats?.activePatients?.total.toLocaleString()}
                 description="Total patients in system"
                 icon={Users}
                 trend={{

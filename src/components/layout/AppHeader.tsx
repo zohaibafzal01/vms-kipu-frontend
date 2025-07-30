@@ -1,27 +1,27 @@
-import { useState } from "react"
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { Button } from "@/components/ui/button"
-import { Bell, User, RefreshCw, LogOut } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+import { useState } from "react";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { Bell, User, RefreshCw, LogOut } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
-import { ProfileModal } from "@/components/modals/ProfileModal"
-import { useNavigate } from "react-router-dom"
+} from "@/components/ui/dropdown-menu";
+import { ProfileModal } from "@/components/modals/ProfileModal";
+import { useNavigate } from "react-router-dom";
 
 export function AppHeader() {
-  const [showProfileModal, setShowProfileModal] = useState(false)
-  const navigate = useNavigate()
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     // Clear any stored auth data
-    localStorage.removeItem('isAuthenticated')
-    navigate('/login')
-  }
+    localStorage.removeItem("isAuthenticated");
+    navigate("/login");
+  };
 
   return (
     <>
@@ -30,7 +30,9 @@ export function AppHeader() {
           <SidebarTrigger className="h-8 w-8" />
           <div>
             <h2 className="text-lg font-semibold">Kipu Import Daemon</h2>
-            <p className="text-sm text-muted-foreground">Healthcare Data Management</p>
+            <p className="text-sm text-muted-foreground">
+              Healthcare Data Management
+            </p>
           </div>
         </div>
 
@@ -51,7 +53,10 @@ export function AppHeader() {
             <Button variant="ghost" size="icon">
               <Bell className="h-4 w-4" />
             </Button>
-            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs">
+            <Badge
+              variant="destructive"
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs"
+            >
               3
             </Badge>
           </div>
@@ -68,7 +73,10 @@ export function AppHeader() {
                 Update Profile
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="text-destructive"
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
               </DropdownMenuItem>
@@ -77,7 +85,10 @@ export function AppHeader() {
         </div>
       </header>
 
-      <ProfileModal open={showProfileModal} onOpenChange={setShowProfileModal} />
+      <ProfileModal
+        open={showProfileModal}
+        onOpenChange={setShowProfileModal}
+      />
     </>
-  )
+  );
 }
