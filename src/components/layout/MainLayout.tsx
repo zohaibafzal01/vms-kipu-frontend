@@ -133,7 +133,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         </nav>
       </div>
 
-      {/* Main Area */}
+      {/* Main Areaa */}
       <div className="flex flex-col flex-1 min-h-0">
         {/* Header */}
         <header className="h-16 flex items-center justify-between border-b border-border bg-background px-4 flex-shrink-0">

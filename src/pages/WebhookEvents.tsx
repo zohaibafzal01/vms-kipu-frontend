@@ -12,7 +12,6 @@ import { DateRangeModal } from "@/components/modals/DateRangeModal"
 import { Search, Filter, Eye, RotateCcw, Shield, Download, Calendar, RefreshCw, AlertTriangle } from "lucide-react"
 import { format } from "date-fns"
 
-// Mock data
 const webhookEvents = [
   {
     id: 1,
