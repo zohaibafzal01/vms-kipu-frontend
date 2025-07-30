@@ -30,6 +30,7 @@ import { DateRangeModal } from "@/components/modals/DateRangeModal";
 import { Search, Filter, Eye, RefreshCw, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import patientApi from "@/api/patient";
+import { useDebounce } from "@/lib/hooks/useDebounce";
 
 const statusTypeColors = {
   active: "success" as const,
@@ -68,12 +69,18 @@ export default function PatientHistory() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
+  const debouncedSearch = useDebounce(searchTerm, 500);
 
   useEffect(() => {
     const fetchPatients = async () => {
       setLoading(true);
       try {
-        const params = { page, limit: 10 };
+        const params = {
+          page,
+          limit: 10,
+          search: debouncedSearch || undefined,
+          status: eventTypeFilter !== "all" ? eventTypeFilter : undefined,
+        };
         const res = await patientApi.getPatient(params);
         const list = res?.data ?? [];
         const pages = res?.pagination?.totalPages ?? 1;
@@ -87,7 +94,7 @@ export default function PatientHistory() {
     };
 
     fetchPatients();
-  }, [page]);
+  }, [page, debouncedSearch, eventTypeFilter]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -149,21 +156,29 @@ export default function PatientHistory() {
               <Input
                 placeholder="Search by patient name or ID..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setPage(1);
+                  setSearchTerm(e.target.value);
+                }}
                 className="pl-10"
               />
             </div>
-            {/* <Select value={eventTypeFilter} onValueChange={setEventTypeFilter}>
+            <Select
+              value={eventTypeFilter}
+              onValueChange={(value) => {
+                setPage(1);
+                setEventTypeFilter(value);
+              }}
+            >
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Event Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Events</SelectItem>
-                <SelectItem value="ADMISSION">Admissions</SelectItem>
-                <SelectItem value="DISCHARGE">Discharges</SelectItem>
-                <SelectItem value="UPDATE">Updates</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="discharged">Discharged</SelectItem>
               </SelectContent>
-            </Select> */}
+            </Select>
           </div>
         </CardContent>
       </Card>
