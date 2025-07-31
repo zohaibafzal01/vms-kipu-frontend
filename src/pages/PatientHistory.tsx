@@ -44,6 +44,7 @@ const sourceTypeColors = {
 
 type Patient = {
   id: string;
+  external_id: string;
   first_name: string;
   last_name: string;
   gender: string;
@@ -191,7 +192,7 @@ export default function PatientHistory() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
+                <TableHead>External ID</TableHead>
                 <TableHead>Patient</TableHead>
                 <TableHead>Gender / Dob</TableHead>
                 <TableHead>Location</TableHead>
@@ -213,7 +214,7 @@ export default function PatientHistory() {
               <TableBody>
                 {filteredEvents.map((event) => (
                   <TableRow key={event.id}>
-                    <TableCell>{event?.id}</TableCell>
+                    <TableCell>{event?.external_id}</TableCell>
                     <TableCell>{`${event?.first_name ?? ""} ${
                       event?.last_name ?? ""
                     }`}</TableCell>
@@ -228,14 +229,18 @@ export default function PatientHistory() {
                       </div>
                     </TableCell>
                     <TableCell className="text-xs">
-                      {[
-                        event?.location_name,
-                        event?.building_name,
-                        event?.room_name,
-                        event?.bed_name,
-                      ]
-                        .filter(Boolean)
-                        .join(", ")}
+                      <div className="space-y-1">
+                        {event?.location_name && (
+                          <div className="text-sm">{event.location_name}</div>
+                        )}
+                        {(event?.room_name || event?.bed_name) && (
+                          <div className="text-xs text-muted-foreground">
+                            {event?.room_name && `Room ${event.room_name}`}
+                            {event?.room_name && event?.bed_name && " / "}
+                            {event?.bed_name && `Bed ${event.bed_name}`}
+                          </div>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant={statusTypeColors[event?.status]}>
@@ -277,19 +282,27 @@ export default function PatientHistory() {
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
                                   <label className="text-sm font-medium">
+                                    ID
+                                  </label>
+                                  <p className="text-sm text-muted-foreground">
+                                    {selectedEvent?.id}
+                                  </p>
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium">
+                                    External ID
+                                  </label>
+                                  <p className="text-sm text-muted-foreground">
+                                    {selectedEvent?.external_id}
+                                  </p>
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium">
                                     Patient Name
                                   </label>
                                   <p className="text-sm text-muted-foreground">
                                     {selectedEvent?.first_name}{" "}
                                     {selectedEvent?.last_name}
-                                  </p>
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium">
-                                    Patient ID
-                                  </label>
-                                  <p className="text-sm text-muted-foreground">
-                                    {selectedEvent?.id}
                                   </p>
                                 </div>
                                 <div>
@@ -338,14 +351,23 @@ export default function PatientHistory() {
                                     Location
                                   </label>
                                   <p className="text-sm text-muted-foreground">
-                                    {[
-                                      selectedEvent?.location_name,
-                                      selectedEvent?.building_name,
-                                      selectedEvent?.room_name,
-                                      selectedEvent?.bed_name,
-                                    ]
-                                      .filter(Boolean)
-                                      .join(", ")}
+                                    {selectedEvent?.location_name || "N/A"}
+                                  </p>
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium">
+                                    Room
+                                  </label>
+                                  <p className="text-sm text-muted-foreground">
+                                    {selectedEvent?.room_name || "N/A"}
+                                  </p>
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium">
+                                    Bed
+                                  </label>
+                                  <p className="text-sm text-muted-foreground">
+                                    {selectedEvent?.bed_name || "N/A"}
                                   </p>
                                 </div>
                                 <div>

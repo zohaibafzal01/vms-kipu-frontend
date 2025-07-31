@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,19 +20,7 @@ import PatientHistory from "./pages/PatientHistory";
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    const isAuth = localStorage.getItem("isAuthenticated") === "true";
-    if (token && isAuth) {
-      setIsAuthenticated(true);
-    }
-  }, []);
-
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-  };
+  const isAuthenticated = !!localStorage.getItem("token");
 
   return (
     <Provider store={store}>
@@ -43,14 +30,14 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* If already logged in and hit /login, redirect to /dashboard */}
+              {/* Public Route */}
               <Route
                 path="/login"
                 element={
                   isAuthenticated ? (
-                    <Navigate to="/dashboard" />
+                    <Navigate to="/dashboard" replace />
                   ) : (
-                    <Login onLogin={handleLogin} />
+                    <Login />
                   )
                 }
               />
@@ -127,14 +114,14 @@ const App = () => {
                 }
               />
 
-              {/* Default redirect */}
+              {/* Root Redirect */}
               <Route
                 path="/"
                 element={
                   isAuthenticated ? (
-                    <Navigate to="/dashboard" />
+                    <Navigate to="/dashboard" replace />
                   ) : (
-                    <Navigate to="/login" />
+                    <Navigate to="/login" replace />
                   )
                 }
               />

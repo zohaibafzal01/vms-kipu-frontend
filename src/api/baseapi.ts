@@ -2,12 +2,20 @@ import axios from "axios";
 import { store } from "@/redux/store";
 import { selectUserInfo } from "@/redux/selectors/userSelectors";
 
+// Optional: logout function
+const logoutAndRedirect = (message?: string) => {
+  localStorage.clear();
+  window.location.href = "/login";
+  window.location.reload();
+};
+
 export default class BaseApi {
   protected axiosInstance = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
   });
 
   constructor() {
+    // Request interceptor
     this.axiosInstance.interceptors.request.use(
       (config) => {
         const state = store.getState();
@@ -23,6 +31,22 @@ export default class BaseApi {
         return config;
       },
       (error) => Promise.reject(error)
+    );
+
+    // Response interceptor for 401 handling
+    this.axiosInstance.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        const status = error.response?.status;
+        const url = error.config?.url;
+
+        if (status === 401) {
+          console.warn(`🔐 401 error on: ${url}`);
+          logoutAndRedirect("Session expired. Please login again.");
+        }
+
+        return Promise.reject(error);
+      }
     );
   }
 
