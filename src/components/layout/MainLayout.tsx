@@ -49,6 +49,8 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleLogout = (reason?: string) => {
+    console.log("Logging out user:", reason);
+
     toast({
       title: reason ? "Session Expired" : "Logged Out",
       description: reason || "You have been successfully logged out.",
@@ -57,7 +59,6 @@ export function MainLayout({ children }: MainLayoutProps) {
 
     localStorage.clear();
     navigate("/login");
-    window.location.reload();
   };
 
   useEffect(() => {

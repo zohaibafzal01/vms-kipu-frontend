@@ -33,11 +33,7 @@ interface LoginFormValues {
   password: string;
 }
 
-interface LoginProps {
-  onLogin: () => void;
-}
-
-export default function Login({ onLogin }: LoginProps) {
+export default function Login() {
   const { toast } = useToast();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -69,7 +65,6 @@ export default function Login({ onLogin }: LoginProps) {
         description: "Redirecting to dashboard...",
       });
 
-      onLogin?.();
       navigate("/dashboard");
     } catch (err: any) {
       const message =
