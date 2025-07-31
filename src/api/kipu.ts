@@ -66,6 +66,10 @@ class KipuApi extends BaseApi {
   async getVmsSync() {
     return await this.get(`${this.baseUrl}/vms_sync`);
   }
+
+  async exportMaster(body: any = {}) {
+    return await this.post(`${this.baseUrl}/import`, body);
+  }
 }
 
 export const kipuApi = new KipuApi();

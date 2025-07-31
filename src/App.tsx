@@ -16,6 +16,7 @@ import { Provider } from "react-redux";
 import { store } from "./redux/store";
 import ProtectedRoute from "@/components/routing/ProtectedRoute";
 import PatientHistory from "./pages/PatientHistory";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -109,6 +110,16 @@ const App = () => {
                   <ProtectedRoute>
                     <MainLayout>
                       <VMSSync />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <Profile />
                     </MainLayout>
                   </ProtectedRoute>
                 }

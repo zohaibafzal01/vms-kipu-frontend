@@ -13,6 +13,10 @@ class AuthApi extends BaseApi {
     });
     return data;
   }
+
+  async changePassword(body: any, config?: any) {
+    return await this.patch(`${this.baseUrl}/change-password`, body, config);
+  }
 }
 
 export const authApi = new AuthApi();

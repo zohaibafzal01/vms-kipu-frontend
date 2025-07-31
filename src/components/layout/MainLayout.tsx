@@ -35,11 +35,12 @@ interface MainLayoutProps {
 const navigationItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Logs Viewer", url: "/logs", icon: FileText },
-  { title: "Event History", url: "/events", icon: Calendar },
   { title: "Patient History", url: "/patients", icon: User },
+  { title: "Event History", url: "/events", icon: Calendar },
   { title: "Room Mapping", url: "/mappings", icon: Map },
   { title: "Webhook Events", url: "/webhooks", icon: Webhook },
   { title: "VMS Sync", url: "/sync", icon: Activity },
+  { title: "Profile", url: "/profile", icon: User },
 ];
 
 export function MainLayout({ children }: MainLayoutProps) {
@@ -159,7 +160,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
               <span className="text-sm text-muted-foreground">
                 System Active
@@ -169,7 +170,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             <Button variant="ghost" size="sm">
               <RefreshCw className="h-4 w-4" />
               Trigger Import
-            </Button>
+            </Button> */}
 
             <div className="relative">
               <Button variant="ghost" size="icon">
@@ -190,6 +191,14 @@ export function MainLayout({ children }: MainLayoutProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-30">
+                <DropdownMenuItem
+                  onClick={() => navigate("/profile")}
+                  className="cursor-pointer flex items-center gap-2"
+                >
+                  <User className="h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+
                 <DropdownMenuItem
                   onClick={() => handleLogout()}
                   className="cursor-pointer text-destructive flex items-center gap-2"

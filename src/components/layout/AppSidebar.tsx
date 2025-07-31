@@ -31,11 +31,13 @@ import { Button } from "@/components/ui/button";
 const navigationItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Logs Viewer", url: "/logs", icon: FileText },
-  { title: "Event History", url: "/events", icon: Calendar },
   { title: "Patient History", url: "/patients", icon: User },
+  { title: "Event History", url: "/events", icon: Calendar },
+
   { title: "Room Mapping", url: "/mappings", icon: Map },
   { title: "Webhook Events", url: "/webhooks", icon: Webhook },
   { title: "VMS Sync", url: "/sync", icon: Activity },
+  { title: "Profile", url: "/profile", icon: User },
 ];
 
 export function AppSidebar() {
