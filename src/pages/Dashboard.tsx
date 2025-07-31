@@ -24,6 +24,7 @@ import {
 import { useSelector } from "react-redux";
 import { selectUserInfo } from "@/redux/selectors/userSelectors";
 import kipuApi from "@/api/kipu";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data
 const dashboardStats = {
@@ -69,6 +70,7 @@ const recentWebhooks = [
 ];
 
 export default function Dashboard() {
+  const { toast } = useToast();
   const userInfo = useSelector(selectUserInfo);
   const [loading, setLoading] = useState(true);
   const [showTriggerModal, setShowTriggerModal] = useState(false);
@@ -92,17 +94,34 @@ export default function Dashboard() {
   }, []);
 
   const handleTriggerImport = async () => {
-    setIsTriggering(true);
-    setTriggerProgress(0);
+    try {
+      setIsTriggering(true);
+      setTriggerProgress(0);
 
-    // Simulate import process
-    for (let i = 0; i <= 100; i += 10) {
-      setTriggerProgress(i);
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      setTriggerProgress(10);
+
+      await kipuApi.exportMaster({ triggeredBy: userInfo?.id });
+
+      setTriggerProgress(100);
+
+      toast({ description: "Import started successfully!" });
+
+      const res = await kipuApi.getDashboard();
+      setDashboardStats(res?.data);
+    } catch (error: any) {
+      toast({
+        description:
+          error?.response?.data?.message || "Failed to trigger import.",
+        variant: "destructive",
+      });
+      console.error("Trigger import error:", error);
+    } finally {
+      setTimeout(() => {
+        setIsTriggering(false);
+        setShowTriggerModal(false);
+        setTriggerProgress(0);
+      }, 1000);
     }
-
-    setIsTriggering(false);
-    setShowTriggerModal(false);
   };
 
   return (
