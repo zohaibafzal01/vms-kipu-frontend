@@ -1,140 +1,183 @@
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { StatusBadge } from "@/components/ui/status-badge"
-import { Badge } from "@/components/ui/badge"
-import { ExportCSVModal } from "@/components/modals/ExportCSVModal"
-import { DateRangeModal } from "@/components/modals/DateRangeModal"
-import { Search, Filter, RefreshCw, Server, Globe, Download, Calendar } from "lucide-react"
-import { format } from "date-fns"
-
-// Mock data
-const vmsSyncActivity = [
-  {
-    id: 1,
-    endpoint: "/api/patients",
-    method: "POST",
-    patientId: "P001234",
-    timestamp: new Date("2024-01-15T14:28:15"),
-    httpStatus: 201,
-    responseTime: 245,
-    retryCount: 0,
-    status: "success" as const
-  },
-  {
-    id: 2,
-    endpoint: "/api/patients/P001235",
-    method: "PUT",
-    patientId: "P001235",
-    timestamp: new Date("2024-01-15T14:25:32"),
-    httpStatus: 200,
-    responseTime: 189,
-    retryCount: 0,
-    status: "success" as const
-  },
-  {
-    id: 3,
-    endpoint: "/api/patients/P001236/discharge",
-    method: "POST",
-    patientId: "P001236",
-    timestamp: new Date("2024-01-15T14:20:18"),
-    httpStatus: 500,
-    responseTime: 5000,
-    retryCount: 3,
-    status: "error" as const
-  },
-  {
-    id: 4,
-    endpoint: "/api/patients",
-    method: "POST",
-    patientId: "P001237",
-    timestamp: new Date("2024-01-15T14:15:44"),
-    httpStatus: 202,
-    responseTime: 167,
-    retryCount: 1,
-    status: "pending" as const
-  },
-]
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Badge } from "@/components/ui/badge";
+import { ExportCSVModal } from "@/components/modals/ExportCSVModal";
+import { DateRangeModal } from "@/components/modals/DateRangeModal";
+import {
+  Search,
+  Filter,
+  RefreshCw,
+  Server,
+  Globe,
+  Download,
+  Calendar,
+  Loader2,
+} from "lucide-react";
+import { format } from "date-fns";
+import kipuApi from "@/api/kipu";
 
 const endpointStats = {
   totalCalls: 1247,
   successRate: 98.2,
   avgResponseTime: 210,
-  errorCount: 23
+  errorCount: 23,
+};
+
+interface VmsSyncItem {
+  id: string;
+  endpoint: string;
+  method: string;
+  patient_id: string;
+  timestamp?: string;
+  created_at: string;
+  updated_at: string;
+  http_status: string;
+  response_time: string;
+  status: "success" | "error" | "pending";
+  retries: number;
 }
 
 export default function VMSSync() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [showTestModal, setShowTestModal] = useState(false)
-  const [showExportModal, setShowExportModal] = useState(false)
-  const [showDateModal, setShowDateModal] = useState(false)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [isTestingConnection, setIsTestingConnection] = useState(false)
-  const [testProgress, setTestProgress] = useState(0)
-  const [testResult, setTestResult] = useState<'idle' | 'success' | 'error'>('idle')
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showTestModal, setShowTestModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [testProgress, setTestProgress] = useState(0);
+  const [testResult, setTestResult] = useState<"idle" | "success" | "error">(
+    "idle"
+  );
+  const [data, setData] = useState<VmsSyncItem[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const res = await kipuApi.getVmsSync(page);
+      const resultData = res?.data ?? [];
+      const resultPagination = res?.pagination ?? { totalPages: 1 };
+
+      setData(resultData);
+      setTotalPages(resultPagination.totalPages);
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+      setData([]);
+      setTotalPages(1);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [page]);
 
   const handleRefresh = async () => {
-    setIsRefreshing(true)
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    setIsRefreshing(false)
-  }
+    setIsRefreshing(true);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setIsRefreshing(false);
+  };
 
-  const handleDateRangeSelect = (from: Date | undefined, to: Date | undefined) => {
-    console.log("Date range selected:", from, to)
-  }
+  const handleDateRangeSelect = (
+    from: Date | undefined,
+    to: Date | undefined
+  ) => {
+    console.log("Date range selected:", from, to);
+  };
 
   const handleTestConnection = async () => {
-    setIsTestingConnection(true)
-    setTestProgress(0)
-    setTestResult('idle')
+    setIsTestingConnection(true);
+    setTestProgress(0);
+    setTestResult("idle");
 
     // Simulate connection test
     for (let i = 0; i <= 100; i += 20) {
-      setTestProgress(i)
-      await new Promise(resolve => setTimeout(resolve, 300))
+      setTestProgress(i);
+      await new Promise((resolve) => setTimeout(resolve, 300));
     }
 
     // Simulate success/failure
-    setTestResult(Math.random() > 0.3 ? 'success' : 'error')
-    setIsTestingConnection(false)
-  }
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [methodFilter, setMethodFilter] = useState("all")
+    setTestResult(Math.random() > 0.3 ? "success" : "error");
+    setIsTestingConnection(false);
+  };
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [methodFilter, setMethodFilter] = useState("all");
 
-  const filteredActivity = vmsSyncActivity.filter(activity => {
-    const matchesSearch = searchTerm === "" || 
-      activity.patientId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      activity.endpoint.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesStatus = statusFilter === "all" || activity.status === statusFilter
-    const matchesMethod = methodFilter === "all" || activity.method === methodFilter
+  // const filteredActivity = vmsSyncActivity.filter((activity) => {
+  //   const matchesSearch =
+  //     searchTerm === "" ||
+  //     activity.patientId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     activity.endpoint.toLowerCase().includes(searchTerm.toLowerCase());
 
-    return matchesSearch && matchesStatus && matchesMethod
-  })
+  //   const matchesStatus =
+  //     statusFilter === "all" || activity.status === statusFilter;
+  //   const matchesMethod =
+  //     methodFilter === "all" || activity.method === methodFilter;
+
+  //   return matchesSearch && matchesStatus && matchesMethod;
+  // });
 
   const getHttpStatusBadge = (status: number) => {
     if (status >= 200 && status < 300) {
-      return <Badge variant="outline" className="text-success border-success/20 bg-success/10">{status}</Badge>
+      return (
+        <Badge
+          variant="outline"
+          className="text-success border-success/20 bg-success/10"
+        >
+          {status}
+        </Badge>
+      );
     } else if (status >= 400 && status < 500) {
-      return <Badge variant="outline" className="text-warning border-warning/20 bg-warning/10">{status}</Badge>
+      return (
+        <Badge
+          variant="outline"
+          className="text-warning border-warning/20 bg-warning/10"
+        >
+          {status}
+        </Badge>
+      );
     } else if (status >= 500) {
-      return <Badge variant="destructive">{status}</Badge>
+      return <Badge variant="destructive">{status}</Badge>;
     }
-    return <Badge variant="outline">{status}</Badge>
-  }
+    return <Badge variant="outline">{status}</Badge>;
+  };
 
   const getMethodBadge = (method: string) => {
-    const colors: Record<string, "outline" | "default" | "destructive" | "secondary"> = {
+    const cleanMethod = method.trim();
+    const colors: Record<
+      string,
+      "outline" | "default" | "destructive" | "secondary"
+    > = {
       GET: "outline",
       POST: "outline",
       PUT: "outline",
-      DELETE: "destructive"
-    }
-    return <Badge variant={colors[method] || "outline"}>{method}</Badge>
-  }
+      DELETE: "destructive",
+    };
+    return (
+      <Badge variant={colors[cleanMethod] || "outline"}>{cleanMethod}</Badge>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -142,7 +185,9 @@ export default function VMSSync() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">VMS Sync Activity</h1>
-          <p className="text-muted-foreground">Monitor API calls to the VMS system</p>
+          <p className="text-muted-foreground">
+            Monitor API calls to the VMS system
+          </p>
         </div>
         <div className="flex gap-2">
           {/* <Button variant="outline" onClick={() => setShowDateModal(true)} className="gap-2">
@@ -162,7 +207,11 @@ export default function VMSSync() {
             <Download className="h-4 w-4" />
             Export CSV
           </Button> */}
-          <Button variant="medical" onClick={() => setShowTestModal(true)} className="gap-2">
+          <Button
+            variant="medical"
+            onClick={() => setShowTestModal(true)}
+            className="gap-2"
+          >
             <RefreshCw className="h-4 w-4" />
             Test Connection
           </Button>
@@ -175,8 +224,12 @@ export default function VMSSync() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total API Calls</p>
-                <p className="text-2xl font-bold">{endpointStats.totalCalls.toLocaleString()}</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total API Calls
+                </p>
+                <p className="text-2xl font-bold">
+                  {endpointStats.totalCalls.toLocaleString()}
+                </p>
               </div>
               <Server className="h-8 w-8 text-muted-foreground" />
             </div>
@@ -186,8 +239,12 @@ export default function VMSSync() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Success Rate</p>
-                <p className="text-2xl font-bold text-success">{endpointStats.successRate}%</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Success Rate
+                </p>
+                <p className="text-2xl font-bold text-success">
+                  {endpointStats.successRate}%
+                </p>
               </div>
               <Globe className="h-8 w-8 text-success" />
             </div>
@@ -197,8 +254,12 @@ export default function VMSSync() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Avg Response</p>
-                <p className="text-2xl font-bold">{endpointStats.avgResponseTime}ms</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Avg Response
+                </p>
+                <p className="text-2xl font-bold">
+                  {endpointStats.avgResponseTime}ms
+                </p>
               </div>
               <RefreshCw className="h-8 w-8 text-muted-foreground" />
             </div>
@@ -208,8 +269,12 @@ export default function VMSSync() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Errors (24h)</p>
-                <p className="text-2xl font-bold text-destructive">{endpointStats.errorCount}</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Errors (24h)
+                </p>
+                <p className="text-2xl font-bold text-destructive">
+                  {endpointStats.errorCount}
+                </p>
               </div>
               <Server className="h-8 w-8 text-destructive" />
             </div>
@@ -285,45 +350,82 @@ export default function VMSSync() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredActivity.map((activity) => (
-                <TableRow key={activity.id}>
-                  <TableCell className="font-mono text-sm">{activity.endpoint}</TableCell>
-                  <TableCell>{getMethodBadge(activity.method)}</TableCell>
-                  <TableCell className="font-medium">{activity.patientId}</TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="text-sm">
-                        {format(activity.timestamp, "MMM dd, yyyy")}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {format(activity.timestamp, "HH:mm:ss")}
-                      </div>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6}>
+                    <div className="w-full h-[300px] flex justify-center items-center">
+                      <Loader2 className="h-8 w-8 text-primary animate-spin" />
                     </div>
                   </TableCell>
-                  <TableCell>{getHttpStatusBadge(activity.httpStatus)}</TableCell>
-                  <TableCell>
-                    <span className={activity.responseTime > 1000 ? "text-warning" : "text-muted-foreground"}>
-                      {activity.responseTime}ms
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={activity.status}>
-                      {activity.status}
-                    </StatusBadge>
-                  </TableCell>
-                  <TableCell>
-                    {activity.retryCount > 0 ? (
-                      <Badge variant="outline" className="text-warning border-warning/20 bg-warning/10">
-                        {activity.retryCount}
-                      </Badge>
-                    ) : (
-                      <span className="text-muted-foreground">0</span>
-                    )}
+                </TableRow>
+              ) : data.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8}>
+                    <div className="text-center text-muted-foreground py-10">
+                      No records found
+                    </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                data.map((activity) => (
+                  <TableRow key={activity.id}>
+                    <TableCell className="font-mono text-sm">
+                      {activity.endpoint}
+                    </TableCell>
+                    <TableCell>{getMethodBadge(activity.method)}</TableCell>
+                    <TableCell className="font-medium">
+                      {activity.patient_id}
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="text-sm">
+                          {format(
+                            new Date(activity.created_at),
+                            "MMM dd, yyyy"
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {format(new Date(activity.created_at), "HH:mm:ss")}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {getHttpStatusBadge(Number(activity.http_status))}
+                    </TableCell>
+                    <TableCell>{activity?.response_time}ms</TableCell>
+                    <TableCell>
+                      <StatusBadge status={activity.status}>
+                        {activity.status}
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell>{activity.retries}</TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
+
+          <div className="flex items-center justify-end gap-2 mt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Next
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -380,5 +482,5 @@ export default function VMSSync() {
         onDateRangeSelect={handleDateRangeSelect}
       /> */}
     </div>
-  )
+  );
 }
