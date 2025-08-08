@@ -43,8 +43,10 @@ class KipuApi extends BaseApi {
     return await this.get(`${this.baseUrl}/import_runs?${query}`);
   }
 
-  async getRoomMapping() {
-    return await this.get(`${this.baseUrl}/room_mapping`);
+  async getRoomMapping(page: number, limit: number = 10) {
+    return await this.get(`${this.baseUrl}/room_mapping`, {
+      params: { page, limit },
+    });
   }
 
   async getWebhookEvents() {
@@ -63,8 +65,10 @@ class KipuApi extends BaseApi {
     return await this.get(`${this.baseUrl}/patients/occupancy`);
   }
 
-  async getVmsSync() {
-    return await this.get(`${this.baseUrl}/vms_sync`);
+  async getVmsSync(page: number, limit: number = 10) {
+    return await this.get(`${this.baseUrl}/vms_sync`, {
+      params: { page, limit },
+    });
   }
 
   async exportMaster(body: any = {}) {

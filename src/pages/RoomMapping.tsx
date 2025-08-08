@@ -1,43 +1,36 @@
-import { useState } from "react"
-import { Formik, Form, Field } from "formik"
-import * as Yup from "yup"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import { Plus, Upload, Edit, Trash2, AlertTriangle, CheckCircle } from "lucide-react"
-
-// Mock data
-const roomMappings = [
-  {
-    id: 1,
-    kipu: { building: "Main Hospital", room: "101", bed: "A" },
-    vms: { building: "Building A", wing: "East", zone: "Medical", room: "101", bed: "A" },
-    status: "mapped" as const
-  },
-  {
-    id: 2,
-    kipu: { building: "Main Hospital", room: "101", bed: "B" },
-    vms: { building: "Building A", wing: "East", zone: "Medical", room: "101", bed: "B" },
-    status: "mapped" as const
-  },
-  {
-    id: 3,
-    kipu: { building: "West Wing", room: "205", bed: "A" },
-    vms: { building: "", wing: "", zone: "", room: "", bed: "" },
-    status: "unmapped" as const
-  },
-  {
-    id: 4,
-    kipu: { building: "Main Hospital", room: "102", bed: "A" },
-    vms: { building: "Building A", wing: "East", zone: "Medical", room: "102", bed: "A" },
-    status: "conflict" as const
-  },
-]
+import { useEffect, useState } from "react";
+import { Formik, Form, Field } from "formik";
+import * as Yup from "yup";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import {
+  Plus,
+  Upload,
+  Edit,
+  Trash2,
+  AlertTriangle,
+  CheckCircle,
+  Loader2,
+} from "lucide-react";
+import kipuApi from "@/api/kipu";
 
 const mappingSchema = Yup.object().shape({
   vmsBuilding: Yup.string().required("VMS Building is required"),
@@ -45,7 +38,7 @@ const mappingSchema = Yup.object().shape({
   vmsZone: Yup.string().required("VMS Zone is required"),
   vmsRoom: Yup.string().required("VMS Room is required"),
   vmsBed: Yup.string().required("VMS Bed is required"),
-})
+});
 
 const addMappingSchema = Yup.object().shape({
   kipuBuilding: Yup.string().required("Kipu Building is required"),
@@ -56,44 +49,88 @@ const addMappingSchema = Yup.object().shape({
   vmsZone: Yup.string().required("VMS Zone is required"),
   vmsRoom: Yup.string().required("VMS Room is required"),
   vmsBed: Yup.string().required("VMS Bed is required"),
-})
+});
 
 export default function RoomMapping() {
-  const [editingMapping, setEditingMapping] = useState<typeof roomMappings[0] | null>(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [roomMappings, setRoomMappings] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [editingMapping, setEditingMapping] = useState(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleEditMapping = (mapping: typeof roomMappings[0]) => {
-    setEditingMapping(mapping)
-    setIsDialogOpen(true)
-  }
+  useEffect(() => {
+    const fetchRoomMappings = async () => {
+      setIsLoading(true);
+      try {
+        const res = await kipuApi.getRoomMapping(page, limit);
+
+        setRoomMappings(res?.data);
+        setTotalPages(res?.pagination?.totalPages || 1);
+      } catch (error) {
+        console.error("Failed to fetch room mappings:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRoomMappings();
+  }, [page, limit]);
+
+  const handleEditMapping = (mapping) => {
+    setEditingMapping(mapping);
+    setIsDialogOpen(true);
+  };
 
   const handleAddMapping = () => {
-    setEditingMapping(null)
-    setIsDialogOpen(true)
-  }
+    setEditingMapping(null);
+    setIsDialogOpen(true);
+  };
 
   const handleSaveMapping = (values: any, id: number | null) => {
     if (id !== null) {
-      console.log("Updating mapping with id", id, "with values", values)
+      console.log("Updating mapping with id", id, "with values", values);
     } else {
-      console.log("Adding new mapping with values", values)
+      console.log("Adding new mapping with values", values);
     }
-    setIsDialogOpen(false)
-    setEditingMapping(null)
-  }
+    setIsDialogOpen(false);
+    setEditingMapping(null);
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "mapped":
-        return <Badge variant="outline" className="text-success border-success/20 bg-success/10"><CheckCircle className="w-3 h-3 mr-1" />Mapped</Badge>
+        return (
+          <Badge
+            variant="outline"
+            className="text-success border-success/20 bg-success/10"
+          >
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Mapped
+          </Badge>
+        );
       case "unmapped":
-        return <Badge variant="outline" className="text-warning border-warning/20 bg-warning/10"><AlertTriangle className="w-3 h-3 mr-1" />Unmapped</Badge>
+        return (
+          <Badge
+            variant="outline"
+            className="text-warning border-warning/20 bg-warning/10"
+          >
+            <AlertTriangle className="w-3 h-3 mr-1" />
+            Unmapped
+          </Badge>
+        );
       case "conflict":
-        return <Badge variant="destructive"><AlertTriangle className="w-3 h-3 mr-1" />Conflict</Badge>
+        return (
+          <Badge variant="destructive">
+            <AlertTriangle className="w-3 h-3 mr-1" />
+            Conflict
+          </Badge>
+        );
       default:
-        return <Badge variant="outline">{status}</Badge>
+        return <Badge variant="outline">{status}</Badge>;
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -101,9 +138,11 @@ export default function RoomMapping() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Room Mapping</h1>
-          <p className="text-muted-foreground">Manage mappings between Kipu and VMS room structures</p>
+          <p className="text-muted-foreground">
+            Manage mappings between Kipu and VMS room structures
+          </p>
         </div>
-        <div className="flex gap-2">
+        {/* <div className="flex gap-2">
           <Button variant="outline" className="gap-2">
             <Upload className="h-4 w-4" />
             Import Excel
@@ -112,11 +151,11 @@ export default function RoomMapping() {
             <Plus className="h-4 w-4" />
             Add Mapping
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {/* Status Summary */}
-      <div className="grid gap-4 md:grid-cols-4">
+      {/* <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -169,7 +208,7 @@ export default function RoomMapping() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
 
       {/* Room Mappings Table */}
       <Card>
@@ -182,56 +221,109 @@ export default function RoomMapping() {
               <TableRow>
                 <TableHead>Kipu Location</TableHead>
                 <TableHead>VMS Mapping</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Created At</TableHead>
+                {/* <TableHead>Status</TableHead> */}
+                {/* <TableHead>Actions</TableHead> */}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {roomMappings.map((mapping) => (
-                <TableRow key={mapping.id}>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="font-medium">{mapping.kipu.building}</div>
-                      <div className="text-sm text-muted-foreground">
-                        Room {mapping.kipu.room}, Bed {mapping.kipu.bed}
-                      </div>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6}>
+                    <div className="w-full h-[300px] flex justify-center items-center">
+                      <Loader2 className="h-8 w-8 text-primary animate-spin" />
                     </div>
                   </TableCell>
-                  <TableCell>
-                    {mapping.status === "unmapped" ? (
-                      <span className="text-muted-foreground italic">Not mapped</span>
-                    ) : (
+                </TableRow>
+              ) : (
+                roomMappings.map((mapping) => (
+                  <TableRow key={mapping?.id}>
+                    <TableCell>
                       <div className="space-y-1">
-                        <div className="text-sm">
-                          {mapping.vms.building} - {mapping.vms.wing}
+                        <div className="font-medium">
+                          {mapping?.building_name}
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {mapping.vms.zone} / Room {mapping.vms.room} / Bed {mapping.vms.bed}
+                        <div className="text-sm text-muted-foreground">
+                          Room {mapping?.room_name}, Bed {mapping?.bed_name}
                         </div>
                       </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(mapping.status)}
-                  </TableCell>
-                  <TableCell>
+                    </TableCell>
+                    <TableCell>
+                      {mapping.status === "unmapped" ? (
+                        <span className="text-muted-foreground italic">
+                          Not mapped
+                        </span>
+                      ) : (
+                        <div className="space-y-1">
+                          <div className="text-sm">
+                            {mapping?.mapped_building} - {mapping?.mapped_wing}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Room {mapping?.mapped_room} / Bed{" "}
+                            {mapping?.mapped_bed}
+                          </div>
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {mapping?.created_at
+                        ? new Date(mapping?.created_at).toLocaleString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )
+                        : "-"}
+                    </TableCell>
+                    {/* <TableCell>{getStatusBadge(mapping?.status)}</TableCell> */}
+                    {/* <TableCell>
                     <div className="flex gap-2">
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="sm"
                         onClick={() => handleEditMapping(mapping)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                  </TableCell> */}
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
+          <div className="flex items-center justify-end gap-2 mt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Next
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -253,7 +345,9 @@ export default function RoomMapping() {
                 vmsBed: editingMapping.vms.bed,
               }}
               validationSchema={mappingSchema}
-              onSubmit={(values) => handleSaveMapping(values, editingMapping.id)}
+              onSubmit={(values) =>
+                handleSaveMapping(values, editingMapping.id)
+              }
             >
               {({ errors, touched }) => (
                 <Form className="space-y-4">
@@ -262,15 +356,21 @@ export default function RoomMapping() {
                     <div className="grid grid-cols-3 gap-4 text-sm">
                       <div>
                         <Label>Building</Label>
-                        <p className="text-muted-foreground">{editingMapping.kipu.building}</p>
+                        <p className="text-muted-foreground">
+                          {editingMapping.kipu.building}
+                        </p>
                       </div>
                       <div>
                         <Label>Room</Label>
-                        <p className="text-muted-foreground">{editingMapping.kipu.room}</p>
+                        <p className="text-muted-foreground">
+                          {editingMapping.kipu.room}
+                        </p>
                       </div>
                       <div>
                         <Label>Bed</Label>
-                        <p className="text-muted-foreground">{editingMapping.kipu.bed}</p>
+                        <p className="text-muted-foreground">
+                          {editingMapping.kipu.bed}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -284,10 +384,20 @@ export default function RoomMapping() {
                           id="vmsBuilding"
                           name="vmsBuilding"
                           placeholder="Building A"
-                          className={errors.vmsBuilding && touched.vmsBuilding ? "border-destructive" : ""}
+                          className={
+                            errors.vmsBuilding && touched.vmsBuilding
+                              ? "border-destructive"
+                              : ""
+                          }
                         />
                         {errors.vmsBuilding && touched.vmsBuilding && (
-                          <p className="text-sm text-destructive mt-1">{errors.vmsBuilding}</p>
+                          <p className="text-sm text-destructive mt-1">
+                            {typeof errors.vmsBuilding === "string"
+                              ? errors.vmsBuilding
+                              : Array.isArray(errors.vmsBuilding)
+                              ? errors.vmsBuilding.join(", ")
+                              : null}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -297,10 +407,20 @@ export default function RoomMapping() {
                           id="vmsWing"
                           name="vmsWing"
                           placeholder="East"
-                          className={errors.vmsWing && touched.vmsWing ? "border-destructive" : ""}
+                          className={
+                            errors.vmsWing && touched.vmsWing
+                              ? "border-destructive"
+                              : ""
+                          }
                         />
                         {errors.vmsWing && touched.vmsWing && (
-                          <p className="text-sm text-destructive mt-1">{errors.vmsWing}</p>
+                          <p className="text-sm text-destructive mt-1">
+                            {typeof errors.vmsWing === "string"
+                              ? errors.vmsWing
+                              : Array.isArray(errors.vmsWing)
+                              ? errors.vmsWing.join(", ")
+                              : null}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -310,10 +430,20 @@ export default function RoomMapping() {
                           id="vmsZone"
                           name="vmsZone"
                           placeholder="Medical"
-                          className={errors.vmsZone && touched.vmsZone ? "border-destructive" : ""}
+                          className={
+                            errors.vmsZone && touched.vmsZone
+                              ? "border-destructive"
+                              : ""
+                          }
                         />
                         {errors.vmsZone && touched.vmsZone && (
-                          <p className="text-sm text-destructive mt-1">{errors.vmsZone}</p>
+                          <p className="text-sm text-destructive mt-1">
+                            {typeof errors.vmsZone === "string"
+                              ? errors.vmsZone
+                              : Array.isArray(errors.vmsZone)
+                              ? errors.vmsZone.join(", ")
+                              : null}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -323,10 +453,20 @@ export default function RoomMapping() {
                           id="vmsRoom"
                           name="vmsRoom"
                           placeholder="101"
-                          className={errors.vmsRoom && touched.vmsRoom ? "border-destructive" : ""}
+                          className={
+                            errors.vmsRoom && touched.vmsRoom
+                              ? "border-destructive"
+                              : ""
+                          }
                         />
                         {errors.vmsRoom && touched.vmsRoom && (
-                          <p className="text-sm text-destructive mt-1">{errors.vmsRoom}</p>
+                          <p className="text-sm text-destructive mt-1">
+                            {typeof errors.vmsRoom === "string"
+                              ? errors.vmsRoom
+                              : Array.isArray(errors.vmsRoom)
+                              ? errors.vmsRoom.join(", ")
+                              : null}
+                          </p>
                         )}
                       </div>
                       <div className="col-span-2">
@@ -336,17 +476,27 @@ export default function RoomMapping() {
                           id="vmsBed"
                           name="vmsBed"
                           placeholder="A"
-                          className={errors.vmsBed && touched.vmsBed ? "border-destructive" : ""}
+                          className={
+                            errors.vmsBed && touched.vmsBed
+                              ? "border-destructive"
+                              : ""
+                          }
                         />
                         {errors.vmsBed && touched.vmsBed && (
-                          <p className="text-sm text-destructive mt-1">{errors.vmsBed}</p>
+                          <p className="text-sm text-destructive mt-1">
+                            {typeof errors.vmsBed === "string"
+                              ? errors.vmsBed
+                              : Array.isArray(errors.vmsBed)
+                              ? errors.vmsBed.join(", ")
+                              : null}
+                          </p>
                         )}
                       </div>
                     </div>
                   </div>
                   <div className="flex justify-end gap-3">
-                    <Button 
-                      type="button" 
+                    <Button
+                      type="button"
                       variant="outline"
                       onClick={() => setIsDialogOpen(false)}
                     >
@@ -386,10 +536,16 @@ export default function RoomMapping() {
                           id="kipuBuilding"
                           name="kipuBuilding"
                           placeholder="Main Hospital"
-                          className={errors.kipuBuilding && touched.kipuBuilding ? "border-destructive" : ""}
+                          className={
+                            errors.kipuBuilding && touched.kipuBuilding
+                              ? "border-destructive"
+                              : ""
+                          }
                         />
                         {errors.kipuBuilding && touched.kipuBuilding && (
-                          <p className="text-sm text-destructive mt-1">{errors.kipuBuilding}</p>
+                          <p className="text-sm text-destructive mt-1">
+                            {errors.kipuBuilding}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -399,10 +555,16 @@ export default function RoomMapping() {
                           id="kipuRoom"
                           name="kipuRoom"
                           placeholder="101"
-                          className={errors.kipuRoom && touched.kipuRoom ? "border-destructive" : ""}
+                          className={
+                            errors.kipuRoom && touched.kipuRoom
+                              ? "border-destructive"
+                              : ""
+                          }
                         />
                         {errors.kipuRoom && touched.kipuRoom && (
-                          <p className="text-sm text-destructive mt-1">{errors.kipuRoom}</p>
+                          <p className="text-sm text-destructive mt-1">
+                            {errors.kipuRoom}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -412,10 +574,16 @@ export default function RoomMapping() {
                           id="kipuBed"
                           name="kipuBed"
                           placeholder="A"
-                          className={errors.kipuBed && touched.kipuBed ? "border-destructive" : ""}
+                          className={
+                            errors.kipuBed && touched.kipuBed
+                              ? "border-destructive"
+                              : ""
+                          }
                         />
                         {errors.kipuBed && touched.kipuBed && (
-                          <p className="text-sm text-destructive mt-1">{errors.kipuBed}</p>
+                          <p className="text-sm text-destructive mt-1">
+                            {errors.kipuBed}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -430,10 +598,16 @@ export default function RoomMapping() {
                           id="vmsBuilding"
                           name="vmsBuilding"
                           placeholder="Building A"
-                          className={errors.vmsBuilding && touched.vmsBuilding ? "border-destructive" : ""}
+                          className={
+                            errors.vmsBuilding && touched.vmsBuilding
+                              ? "border-destructive"
+                              : ""
+                          }
                         />
                         {errors.vmsBuilding && touched.vmsBuilding && (
-                          <p className="text-sm text-destructive mt-1">{errors.vmsBuilding}</p>
+                          <p className="text-sm text-destructive mt-1">
+                            {errors.vmsBuilding}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -443,10 +617,16 @@ export default function RoomMapping() {
                           id="vmsWing"
                           name="vmsWing"
                           placeholder="East"
-                          className={errors.vmsWing && touched.vmsWing ? "border-destructive" : ""}
+                          className={
+                            errors.vmsWing && touched.vmsWing
+                              ? "border-destructive"
+                              : ""
+                          }
                         />
                         {errors.vmsWing && touched.vmsWing && (
-                          <p className="text-sm text-destructive mt-1">{errors.vmsWing}</p>
+                          <p className="text-sm text-destructive mt-1">
+                            {errors.vmsWing}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -456,10 +636,16 @@ export default function RoomMapping() {
                           id="vmsZone"
                           name="vmsZone"
                           placeholder="Medical"
-                          className={errors.vmsZone && touched.vmsZone ? "border-destructive" : ""}
+                          className={
+                            errors.vmsZone && touched.vmsZone
+                              ? "border-destructive"
+                              : ""
+                          }
                         />
                         {errors.vmsZone && touched.vmsZone && (
-                          <p className="text-sm text-destructive mt-1">{errors.vmsZone}</p>
+                          <p className="text-sm text-destructive mt-1">
+                            {errors.vmsZone}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -469,10 +655,16 @@ export default function RoomMapping() {
                           id="vmsRoom"
                           name="vmsRoom"
                           placeholder="101"
-                          className={errors.vmsRoom && touched.vmsRoom ? "border-destructive" : ""}
+                          className={
+                            errors.vmsRoom && touched.vmsRoom
+                              ? "border-destructive"
+                              : ""
+                          }
                         />
                         {errors.vmsRoom && touched.vmsRoom && (
-                          <p className="text-sm text-destructive mt-1">{errors.vmsRoom}</p>
+                          <p className="text-sm text-destructive mt-1">
+                            {errors.vmsRoom}
+                          </p>
                         )}
                       </div>
                       <div className="col-span-2">
@@ -482,17 +674,23 @@ export default function RoomMapping() {
                           id="vmsBed"
                           name="vmsBed"
                           placeholder="A"
-                          className={errors.vmsBed && touched.vmsBed ? "border-destructive" : ""}
+                          className={
+                            errors.vmsBed && touched.vmsBed
+                              ? "border-destructive"
+                              : ""
+                          }
                         />
                         {errors.vmsBed && touched.vmsBed && (
-                          <p className="text-sm text-destructive mt-1">{errors.vmsBed}</p>
+                          <p className="text-sm text-destructive mt-1">
+                            {errors.vmsBed}
+                          </p>
                         )}
                       </div>
                     </div>
                   </div>
                   <div className="flex justify-end gap-3">
-                    <Button 
-                      type="button" 
+                    <Button
+                      type="button"
                       variant="outline"
                       onClick={() => setIsDialogOpen(false)}
                     >
@@ -509,5 +707,5 @@ export default function RoomMapping() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
