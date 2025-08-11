@@ -49,6 +49,18 @@ class KipuApi extends BaseApi {
     });
   }
 
+  async createRoomMapping(data: any) {
+    return await this.post(`${this.baseUrl}/room_mapping`, data);
+  }
+
+  async updateRoomMapping(id: number, data: any) {
+    return await this.patch(`${this.baseUrl}/room_mapping/${id}`, data);
+  }
+
+  async deleteRoomMapping(id: number) {
+    return await this.delete(`${this.baseUrl}/room_mapping/${id}`);
+  }
+
   async getWebhookEvents() {
     return await this.get(`${this.baseUrl}/webhook_events`);
   }
