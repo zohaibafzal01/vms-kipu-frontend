@@ -34,13 +34,6 @@ import {
 import { format } from "date-fns";
 import kipuApi from "@/api/kipu";
 
-const endpointStats = {
-  totalCalls: 1247,
-  successRate: 98.2,
-  avgResponseTime: 210,
-  errorCount: 23,
-};
-
 interface VmsSyncItem {
   id: string;
   endpoint: string;
@@ -55,6 +48,13 @@ interface VmsSyncItem {
   retries: number;
 }
 
+interface VmsDashboardData {
+  apiCalls: number;
+  successRate: number;
+  averageResponseTime: number;
+  errors: number;
+}
+
 export default function VMSSync() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showTestModal, setShowTestModal] = useState(false);
@@ -67,9 +67,27 @@ export default function VMSSync() {
     "idle"
   );
   const [data, setData] = useState<VmsSyncItem[]>([]);
+
+  const [vmsData, setVmsData] = useState<VmsDashboardData | undefined>();
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchVmsData = async () => {
+      setIsLoading(true);
+      try {
+        const res = await kipuApi.getVMSdashboard();
+        setVmsData(res?.data);
+      } catch (error) {
+        console.error("Failed to fetch VMS data:", error);
+        setVmsData(undefined);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchVmsData();
+  }, []);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -228,7 +246,7 @@ export default function VMSSync() {
                   Total API Calls
                 </p>
                 <p className="text-2xl font-bold">
-                  {endpointStats.totalCalls.toLocaleString()}
+                  {isLoading ? "—" : vmsData?.apiCalls?.toLocaleString() ?? "0"}
                 </p>
               </div>
               <Server className="h-8 w-8 text-muted-foreground" />
@@ -243,7 +261,11 @@ export default function VMSSync() {
                   Success Rate
                 </p>
                 <p className="text-2xl font-bold text-success">
-                  {endpointStats.successRate}%
+                  {isLoading
+                    ? "—"
+                    : vmsData?.successRate != null
+                    ? `${vmsData.successRate}%`
+                    : "0%"}
                 </p>
               </div>
               <Globe className="h-8 w-8 text-success" />
@@ -258,7 +280,11 @@ export default function VMSSync() {
                   Avg Response
                 </p>
                 <p className="text-2xl font-bold">
-                  {endpointStats.avgResponseTime}ms
+                  {isLoading
+                    ? "—"
+                    : vmsData?.averageResponseTime != null
+                    ? `${vmsData.averageResponseTime}ms`
+                    : "0ms"}
                 </p>
               </div>
               <RefreshCw className="h-8 w-8 text-muted-foreground" />
@@ -273,7 +299,7 @@ export default function VMSSync() {
                   Errors (24h)
                 </p>
                 <p className="text-2xl font-bold text-destructive">
-                  {endpointStats.errorCount}
+                  {isLoading ? "—" : vmsData?.errors ?? "0"}
                 </p>
               </div>
               <Server className="h-8 w-8 text-destructive" />

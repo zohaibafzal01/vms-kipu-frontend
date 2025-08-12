@@ -73,6 +73,10 @@ class KipuApi extends BaseApi {
     return await this.get(`${this.baseUrl}/patients/census`);
   }
 
+  async getVMSdashboard() {
+    return await this.get(`${this.baseUrl}/vms_sync/dashboard`);
+  }
+
   async getPatientsOccupancy() {
     return await this.get(`${this.baseUrl}/patients/occupancy`);
   }
